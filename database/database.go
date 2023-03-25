@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"project/config"
 	"strconv"
+
+	"github.com/andrelaurent/project-register/config"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
