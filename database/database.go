@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/andrelaurent/project-register/config"
+	"github.com/andrelaurent/project-register/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -41,5 +42,5 @@ func Connect() {
 	log.Println("connected")
 	db.Logger = logger.Default.LogMode(logger.Info)
 	log.Println("running migations")
-	db.AutoMigrate(&models.project{})
+	db.AutoMigrate(&models.Projects{}, &models.Company{}, &models.Client{}, &models.ProjectType{})
 }
