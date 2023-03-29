@@ -28,3 +28,20 @@ func CreateCompany(c *fiber.Ctx) error {
 		"status": "success", "message": "Company has created", "data": company,
 	})
 }
+
+func GetCompanies(c *fiber.Ctx) error {
+	db := database.DB.Db
+	var company []models.Company
+
+	db.Find(&company)
+
+	if len(company) == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": "error", "message": "no company found", "data": "nil",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "sucess", "message": "Companies Found", "data": company,
+	})
+}
