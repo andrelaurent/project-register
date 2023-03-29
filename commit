@@ -1,0 +1,29 @@
+[33mcommit 874d2220656880888faad5218ade188cdcf35a3b[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m
+Author: andrelaurent <andre.laurent17@gmail.com>
+Date:   Sun Mar 26 01:08:03 2023 +0700
+
+    debugging database migration
+
+[33mcommit 02cec94202b57417e0b2962888656b228f8f34d5[m
+Author: andrelaurent <andre.laurent17@gmail.com>
+Date:   Sun Mar 26 01:01:10 2023 +0700
+
+    modified .env file
+
+[33mcommit 494b0a323809ebc548f967dfc197623d41a19613[m
+Author: andrelaurent <andre.laurent17@gmail.com>
+Date:   Sun Mar 26 00:44:53 2023 +0700
+
+    new changes, creating models, routes
+
+[33mcommit df7268aa4b8f58737dfd75806ea4320ce9abb6f8[m
+Author: andrelaurent <andre.laurent17@gmail.com>
+Date:   Sun Mar 26 00:13:59 2023 +0700
+
+    changes
+
+[33mcommit 0651f14cc77650d19d0ad4a99a4ca67e6f063d66[m[33m ([m[1;31morigin/main[m[33m)[m
+Author: andrelaurent <andre.laurent17@gmail.com>
+Date:   Sun Mar 26 00:03:38 2023 +0700
+
+    Initial commit

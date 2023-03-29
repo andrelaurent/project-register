@@ -1,0 +1,27 @@
+root = "."
+tmp_dir = "tmp"
+build_args = ["-a", "-tags", "netgo", "-installsuffix", "netgo", "."]
+
+[build.targets]
+  cmd/project-register = "cmd/project-register/main.go"
+
+[build.options]
+  binary_name = "project-register"
+  ldflags = "-w -s"
+
+[log]
+  level = "debug"
+
+[monitor]
+  delay = 1000
+
+[web]
+  address = ":8080"
+  browse = false
+
+[tasks.dev]
+  ignore = ["tmp/**", "**/*.md", "**/*.toml", "**/*.txt", "**/*.html", "**/*.tmpl", "**/*.xml"]
+  include = ["**/*.go"]
+  exclude = []
+  bin = "./project-register"
+  args = ["run", "cmd/project-register/main.go"]
