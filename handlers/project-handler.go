@@ -84,12 +84,24 @@ func CreateProject(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			uniqueNum = 1
 		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to create project",
+		})
+	} else {
+		uniqueNum = project.UniqueNO + 1
 	}
-	uniqueNum = project.UniqueNO + 1
 
 	projectId := project.ProjectTypeID + "/" + project.CompanyID + "/" + project.ClientID + "/" + strconv.Itoa(uniqueNum) + "/" + strconv.Itoa(project.Year)
+	projectTitle := projectId + ": " + project.ProjectName
 
 	project.ProjectID = projectId
+	project.ProjectTitle = projectTitle
+
+	if err := db.Create(&project).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to create project",
+		})
+	}
 
 	return c.Status(fiber.StatusCreated).JSON(project)
 }
