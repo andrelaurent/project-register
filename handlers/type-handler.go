@@ -1,18 +1,24 @@
 package handlers
 
-// func GetTypes(c *fiber.Ctx) error {
-// 	db := database.DB.Db
-// 	var type []models.ProjectType
+import (
+	"github.com/andrelaurent/project-register/database"
+	"github.com/andrelaurent/project-register/models"
+	"github.com/gofiber/fiber/v2"
+)
 
-// 	db.Find(&type)
+func GetTypes(c *fiber.Ctx) error {
+	db := database.DB.Db
+	var projectType []models.ProjectType
 
-// 	if len(type) == 0 {
-// 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-// 			"status": "error", "message": "no type found", "data": "nil",
-// 		})
-// 	}
+	db.Find(&projectType)
 
-// 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-// 		"status": "sucess", "message": "Types Found", "data": company,
-// 	})
-// }
+	if len(projectType) == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": "error", "message": "no type found", "data": "nil",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "sucess", "message": "Types Found", "data": projectType,
+	})
+}
