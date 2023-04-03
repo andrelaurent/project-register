@@ -13,5 +13,4 @@ func SetupRoutes(app *fiber.App) {
 	// v4 := api.Group("/manager")
 	v1.Get("/read", handlers.GetCompanies)
 	v1.Post("/create", handlers.CreateCompany)
-	v2.Post("/create", handlers.CreateProject)
 }
