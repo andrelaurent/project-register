@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/andrelaurent/project-register/database"
@@ -20,10 +21,14 @@ func CreateProject(c *fiber.Ctx) error {
 		})
 	}
 
+	// c.BodyParser(&project)
+
 	var company models.Company
 	var client models.Client
 	var projectType models.ProjectType
 	var manager models.Manager
+
+	log.Println(project.CompanyID)
 
 	err := db.First(&company, "id = '"+project.CompanyID+"'").Error
 	if err != nil {
@@ -84,16 +89,16 @@ func CreateProject(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			uniqueNum = 1
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to create project",
-		})
-	} else {
-		uniqueNum = project.UniqueNO + 1
+		// return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+		// 	"message": "Failed to create project",
+		// })
 	}
+	uniqueNum = project.UniqueNO + 1
 
 	projectId := project.ProjectTypeID + "/" + project.CompanyID + "/" + project.ClientID + "/" + strconv.Itoa(uniqueNum) + "/" + strconv.Itoa(project.Year)
 	projectTitle := projectId + ": " + project.ProjectName
 
+	project.UniqueNO = uniqueNum
 	project.ProjectID = projectId
 	project.ProjectTitle = projectTitle
 
@@ -105,3 +110,4 @@ func CreateProject(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusCreated).JSON(project)
 }
+
