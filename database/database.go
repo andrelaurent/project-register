@@ -44,7 +44,7 @@ func Connect() {
 	log.Println("running migations")
 	db.AutoMigrate(&models.Project{}, &models.Company{}, &models.Client{}, &models.ProjectType{})
 
-	DB = Dbinstance {
+	DB = Dbinstance{
 		Db: db,
 	}
 }
