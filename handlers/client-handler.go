@@ -33,5 +33,52 @@ func GetAllClients(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Clients not found", "data": nil})
 	}
 
-	return c.Status(200).JSON(fiber.Map{"status": "sucess", "message": "Client Found", "data": clients})
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Client Found", "data": clients})
+}
+
+func UpdateClient(c *fiber.Ctx) error {
+
+	type updateClient struct {
+		Username string `json:"name"`
+	}
+
+	db := database.DB.Db
+	var client models.Client
+
+	id := c.Params("id")
+
+	db.Find(&client, "id = ?", id)
+
+	if client == (models.Client{}) {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "client not found", "data": nil})
+	}
+
+	var updateClientData updateClient
+	err := c.BodyParser(&updateClientData)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
+	}
+	client.ClientName = updateClientData.Username
+
+	db.Save(&client)
+	
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "clients Found", "data": client})
+}
+
+func DeleteClientByID(c *fiber.Ctx) error {
+	db := database.DB.Db
+	var client models.Client
+
+	id := c.Params("id")
+
+	db.Find(&client, "id = ?", id)
+
+	if client == (models.Client{}) {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Client not found", "data": nil})
+	}
+	err := db.Delete(&client, "id = ?", id).Error
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Failed to delete client", "data": nil})
+	}
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Client deleted"})
 }
