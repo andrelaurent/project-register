@@ -29,7 +29,7 @@ func CreateCompany(c *fiber.Ctx) error {
 	})
 }
 
-func GetCompanies(c *fiber.Ctx) error {
+func GetAllCompanies(c *fiber.Ctx) error {
 	db := database.DB.Db
 	var company []models.Company
 
@@ -44,4 +44,51 @@ func GetCompanies(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "sucess", "message": "Companies Found", "data": company,
 	})
+}
+
+func UpdateCompany(c *fiber.Ctx) error {
+
+	type updatecompany struct {
+		Username string `json:"name"`
+	}
+
+	db := database.DB.Db
+	var company models.Company
+
+	id := c.Params("id")
+
+	db.Find(&company, "id = ?", id)
+
+	if company == (models.Company{}) {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Company not found", "data": nil})
+	}
+
+	var updatecompanyData updatecompany
+	err := c.BodyParser(&updatecompanyData)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
+	}
+	company.CompanyName = updatecompanyData.Username
+
+	db.Save(&company)
+
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Companys Found", "data": company})
+}
+
+func DeleteCompanyByID(c *fiber.Ctx) error {
+	db := database.DB.Db
+	var company models.Company
+
+	id := c.Params("id")
+
+	db.Find(&company, "id = ?", id)
+
+	if company == (models.Company{}) {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Company not found", "data": nil})
+	}
+	err := db.Delete(&company, "id = ?", id).Error
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Failed to delete company", "data": nil})
+	}
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Company deleted"})
 }
