@@ -86,3 +86,31 @@ func UpdateType(c *fiber.Ctx) error {
 		"status": "success", "message": "type updated", "data": projectType,
 	})
 }
+
+func DeleteType(c *fiber.Ctx) error {
+	db := database.DB.Db
+
+	var projectType models.ProjectType
+
+	id := c.Params("id")
+
+	db.Find(&projectType, "id = ?", id)
+
+	if projectType == (models.ProjectType{}) {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": "error", "message": "Type not found",
+		})
+	}
+
+	err := db.Delete(&projectType, "id = ?", id).Error
+
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": "error", "message": "Failed to delete user", "data": nil,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "error", "message": "Type deleted",
+	})
+}
