@@ -17,7 +17,7 @@ func CreateProject(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&project); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Invalid body request",
+			"status": "error", "message": "Invalid body request",
 		})
 	}
 
