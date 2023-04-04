@@ -5,26 +5,26 @@ import "gorm.io/gorm"
 type Project struct {
 	gorm.Model
 	ProjectID     string      `json:"ID" gorm:"primaryKey"`
-	ProjectTypeID string      `json:"type_id" gorm:"index"`
-	ProjectType   ProjectType `json:"project_type"`
-	ProjectName   string      `json:"name"`
-	UniqueNO      int         `json:"no"`
-	Year          int         `json:"year"`
-	ManagerID     string      `json:"manager_id"`
-	Manager       Manager     `json:"manager"`
-	ProjectStatus string      `json:"status"`
-	ProjectTitle  string      `json:"title"`
-	ProjectAmount int         `json:"amount"`
-	CompanyID     string      `json:"company_id"`
-	Company       Company     `json:"company"`
-	ClientID      string      `json:"client_id"`
-	Client        Client      `json:"client"`
-	ProspectID    string      `json:"prospect_id"`
-	Prospect      Prospect    `json:"prospect"`
-	Jira          bool        `json:"jira"`
-	Clockify      bool        `json:"clockify"`
-	Pcs           bool        `json:"pcs"`
-	Pms           bool        `json:"pms"`
+	ProjectTypeID string      `json:"type_id" gorm:"index;not null"`
+	ProjectType   ProjectType `json:"project_type" gorm:"not null"`
+	ProjectName   string      `json:"name" gorm:"not null"`
+	UniqueNO      int         `json:"no" gorm:"not null"`
+	Year          int         `json:"year" gorm:"not null"`
+	ManagerID     string      `json:"manager_id" gorm:"index;not null"`
+	Manager       Manager     `json:"manager" gorm:"not null"`
+	ProjectStatus string      `json:"status" gorm:"not null"`
+	ProjectTitle  string      `json:"title" gorm:"not null"`
+	ProjectAmount int         `json:"amount" gorm:"not null"`
+	CompanyID     string      `json:"company_id" gorm:"index;not null"`
+	Company       Company     `json:"company" gorm:"not null"`
+	ClientID      string      `json:"client_id" gorm:"index;not null"`
+	Client        Client      `json:"client" gorm:"not null"`
+	ProspectID    string      `json:"prospect_id" gorm:"index;not null"`
+	Prospect      Prospect    `json:"prospect" gorm:"not null"`
+	Jira          bool        `json:"jira" gorm:"not null"`
+	Clockify      bool        `json:"clockify" gorm:"not null"`
+	Pcs           bool        `json:"pcs" gorm:"not null"`
+	Pms           bool        `json:"pms" gorm:"not null"`
 }
 
 type Projects struct {
