@@ -19,6 +19,8 @@ type Project struct {
 	Company       Company     `json:"company"`
 	ClientID      string      `json:"client_id"`
 	Client        Client      `json:"client"`
+	ProspectID    string      `json:"prospect_id"`
+	Prospect      Prospect    `json:"prospect"`
 	Jira          bool        `json:"jira"`
 	Clockify      bool        `json:"clockify"`
 	Pcs           bool        `json:"pcs"`

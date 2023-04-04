@@ -25,6 +25,7 @@ func CreateProject(c *fiber.Ctx) error {
 	var client models.Client
 	var projectType models.ProjectType
 	var manager models.Manager
+	// var prospect models.Prospect
 
 	log.Println(project.CompanyID)
 
@@ -79,6 +80,8 @@ func CreateProject(c *fiber.Ctx) error {
 		})
 	}
 	project.Manager = manager
+
+	// err = db.First(&prospect, "id = ")
 
 	var uniqueNum int
 
