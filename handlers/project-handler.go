@@ -119,3 +119,21 @@ func CreateProject(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusCreated).JSON(project)
 }
+
+func GetAllProjects(c *fiber.Ctx) error {
+	db := database.DB.Db
+
+	var projects []models.Project
+
+	db.Find(&projects)
+
+	if len(projects) == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": "error", "message": "No project found", "data": nil,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success", "message": "Projects found", "data": projects,
+	})
+}

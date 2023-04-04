@@ -30,4 +30,8 @@ func SetupRoutes(app *fiber.App) {
 	v3.Post("/create", handlers.CreateManager)
 	v3.Put("/:id", handlers.UpdateManager)
 	v3.Delete("/:id", handlers.DeleteManagerByID)
+
+	v5 := api.Group("/projects")
+	v5.Post("/create", handlers.CreateProject)
+	v5.Get("/read", handlers.GetAllProjects)
 }
