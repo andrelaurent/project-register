@@ -6,7 +6,7 @@ type Prospect struct {
 	gorm.Model
 	ProspectID     string      `json:"ID" gorm:"primaryKey;column:id;not null"`
 	ProjectTypeID  string      `json:"type_id" gorm:"index;not null"`
-	ProjectType    ProjectType `json:"Project_type" gorm:"not null"`
+	ProjectType    ProjectType `json:"project_type" gorm:"not null"`
 	ProspectName   string      `json:"name" gorm:"not null"`
 	UniqueNO       int         `json:"no" gorm:"not null"`
 	Year           int         `json:"year" gorm:"not null"`

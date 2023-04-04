@@ -106,16 +106,15 @@ func GetAllProspects(c *fiber.Ctx) error {
 	db := database.DB.Db
 
 	var prospects []models.Prospect
-
-	db.Find(&prospects)
+	db.Preload("Company").Preload("Manager").Preload("ProjectType").Preload("Client").Find(&prospects)
 
 	if len(prospects) == 0 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"status": "error", "message": "No project found", "data": nil,
+			"status": "error", "message": "No prospect found", "data": nil,
 		})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"status": "success", "message": "Projects found", "data": prospects,
+		"status": "success", "message": "Prospects found", "data": prospects,
 	})
 }
