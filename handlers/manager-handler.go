@@ -76,6 +76,11 @@ func DeleteManagerByID(c *fiber.Ctx) error {
 	if manager == (models.Manager{}) {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Manager not found", "data": nil})
 	}
+
+	if manager.ManagerID == "" || manager.ManagerName == "" {
+		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "Manager ID and name are required", "data": nil})
+	}
+
 	err := db.Delete(&manager, "id = ?", id).Error
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Failed to delete manager", "data": nil})

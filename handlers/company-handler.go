@@ -17,6 +17,10 @@ func CreateCompany(c *fiber.Ctx) error {
 		})
 	}
 
+	if company.CompanyID == "" || company.CompanyName == "" {
+		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "Company ID and name are required", "data": nil})
+	}
+
 	err = db.Create(&company).Error
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
