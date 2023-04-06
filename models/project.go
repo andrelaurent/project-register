@@ -14,7 +14,7 @@ type Project struct {
 	Pic           string      `json:"manager" gorm:"not null"`
 	ProjectStatus string      `json:"status" gorm:"not null"`
 	ProjectTitle  string      `json:"title" gorm:"not null"`
-	ProjectAmount int         `json:"amount" gorm:"not null"`
+	ProjectAmount float64     `json:"amount" gorm:"not null"`
 	CompanyID     string      `json:"company_id" gorm:"index;not null"`
 	Company       Company     `json:"company" gorm:"not null"`
 	ClientID      string      `json:"client_id" gorm:"index;not null"`
