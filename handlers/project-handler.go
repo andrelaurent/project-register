@@ -24,7 +24,7 @@ func CreateProject(c *fiber.Ctx) error {
 	var company models.Company
 	var client models.Client
 	var projectType models.ProjectType
-	var manager models.Manager
+	// var manager models.Manager
 	var prospect models.Prospect
 
 	log.Println(project.CompanyID)
@@ -68,18 +68,18 @@ func CreateProject(c *fiber.Ctx) error {
 	}
 	project.ProjectType = projectType
 
-	err = db.First(&manager, "id = '"+project.ManagerID+"'").Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"message": "Manager not found",
-			})
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to create project",
-		})
-	}
-	project.Manager = manager
+	// err = db.First(&manager, "id = '"+project.ManagerID+"'").Error
+	// if err != nil {
+	// 	if err == gorm.ErrRecordNotFound {
+	// 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+	// 			"message": "Manager not found",
+	// 		})
+	// 	}
+	// 	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+	// 		"message": "Failed to create project",
+	// 	})
+	// }
+	// project.Manager = manager
 
 	err = db.First(&prospect, "id = "+project.ProspectID+"'").Error
 	if err != nil {
@@ -95,14 +95,15 @@ func CreateProject(c *fiber.Ctx) error {
 	project.Prospect = prospect
 
 	var uniqueNum int
+	var project2 models.Project
 
-	err = db.Order("created_at DESC").Where("project_type_id = ? AND year = ? AND company_id = ? AND client_id = ?", project.ProjectTypeID, project.Year, project.CompanyID, project.ClientID).First(&project).Error
+	err = db.Order("created_at DESC").Where("project_type_id = ? AND year = ? AND company_id = ? AND client_id = ?", project.ProjectTypeID, project.Year, project.CompanyID, project.ClientID).First(&project2).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			uniqueNum = 1
 		}
 	}
-	uniqueNum = project.UniqueNO + 1
+	uniqueNum = project2.UniqueNO + 1
 
 	projectId := project.ProjectTypeID + "/" + project.CompanyID + "/" + project.ClientID + "/" + strconv.Itoa(uniqueNum) + "/" + strconv.Itoa(project.Year)
 	projectTitle := projectId + ": " + project.ProjectName
@@ -125,7 +126,7 @@ func GetAllProjects(c *fiber.Ctx) error {
 
 	var projects []models.Project
 
-	db.Find(&projects)
+	db.Preload("Company").Preload("Manager").Preload("ProjectType").Preload("Client").Preload("Prospect").Find(&projects)
 
 	if len(projects) == 0 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{

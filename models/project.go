@@ -4,14 +4,14 @@ import "gorm.io/gorm"
 
 type Project struct {
 	gorm.Model
-	ProjectID     string      `json:"ID" gorm:"primaryKey"`
+	ID            uint        `json:"ID" gorm:"primaryKey;autoIncrement"`
+	ProjectID     string      `json:"project_id" gorm:"not null"`
 	ProjectTypeID string      `json:"type_id" gorm:"index;not null"`
 	ProjectType   ProjectType `json:"project_type" gorm:"not null"`
 	ProjectName   string      `json:"name" gorm:"not null"`
 	UniqueNO      int         `json:"no" gorm:"not null"`
 	Year          int         `json:"year" gorm:"not null"`
-	ManagerID     string      `json:"manager_id" gorm:"index;not null"`
-	Manager       Manager     `json:"manager" gorm:"not null"`
+	Pic           string      `json:"manager" gorm:"not null"`
 	ProjectStatus string      `json:"status" gorm:"not null"`
 	ProjectTitle  string      `json:"title" gorm:"not null"`
 	ProjectAmount int         `json:"amount" gorm:"not null"`
