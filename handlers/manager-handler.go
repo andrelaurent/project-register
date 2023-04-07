@@ -36,7 +36,7 @@ func GetAllManagers(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{"status": "sucess", "message": "Manager Found", "data": managers})
 }
 
-func GetmanagerByID(c *fiber.Ctx) error {
+func GetManagerByID(c *fiber.Ctx) error {
 	db := database.DB.Db
 	var manager models.Manager
 
@@ -50,7 +50,7 @@ func GetmanagerByID(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "manager retrieved", "data": manager})
 }
 
-func Searchmanager(c *fiber.Ctx) error {
+func SearchManager(c *fiber.Ctx) error {
 	db := database.DB.Db
 	req := new(models.Manager)
 	if err := c.BodyParser(req); err != nil {

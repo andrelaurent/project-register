@@ -29,6 +29,8 @@ func SetupRoutes(app *fiber.App) {
 
 	v3 := api.Group("/manager")
 	v3.Get("/read", handlers.GetAllManagers)
+	v3.Get("read", handlers.GetManagerByID)
+	v2.Get("/search", handlers.SearchManager)
 	v3.Post("/create", handlers.CreateManager)
 	v3.Put("/:id", handlers.UpdateManager)
 	v3.Delete("/:id", handlers.DeleteManagerByID)
