@@ -64,7 +64,7 @@ func CreateProspect(c *fiber.Ctx) error {
 
 	var uniqueNum int
 	var prospect2 models.Prospect
-	if err := db.Order("id DESC").Where("project_type_id = ? AND year = ? AND company_id = ? AND client_id = ?", prospect.ProjectTypeID, prospect.Year, prospect.CompanyID, prospect.ClientID).First(&prospect2).Error; err != nil {
+	if err := db.Order("unique_no DESC").Where("project_type_id = ? AND year = ? AND company_id = ? AND client_id = ?", prospect.ProjectTypeID, prospect.Year, prospect.CompanyID, prospect.ClientID).First(&prospect2).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			uniqueNum = 1
 		}
@@ -225,11 +225,51 @@ func UpdateProspect(c *fiber.Ctx) error {
 		prospect.Pms = val.(bool)
 	}
 
+	var uniqueNum int
+	var findProspect models.Prospect
+
+	if err := db.Order("unique_no DESC").Where("project_type_id = ? AND year = ? AND company_id = ? AND client_id = ?", prospect.ProjectTypeID, prospect.Year, prospect.CompanyID, prospect.ClientID).First(&findProspect).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			uniqueNum = 1
+		}
+	}
+
+	uniqueNum = findProspect.UniqueNO + 1
+	prospect.UniqueNO = uniqueNum
+	numString := fmt.Sprintf("%02d", uniqueNum)
+	prospect.ProspectID = "PROSPECT/" + prospect.ProjectTypeID + "/" + prospect.CompanyID + "/" + prospect.ClientID + "/" + numString + "/" + strconv.Itoa(prospect.Year)
+	prospect.ProspectTitle = fmt.Sprintf("%s: %s", prospect.ProspectID, prospect.ProspectName)
+
 	if err := db.Save(&prospect).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"status": "error", "message": "Failed to update prospect", "data": nil,
+			"status":  "error",
+			"message": "Failed to update prospect",
+			"data":    nil,
 		})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(prospect)
 }
+
+// UPDATE PROSPECT LOOP DATA
+
+// var uniqueNum int
+// var findProspects []models.Prospect
+
+// if err := db.Order("unique_no DESC").Where("project_type_id = ? AND year = ? AND company_id = ? AND client_id = ?", prospect.ProjectTypeID, prospect.Year, prospect.CompanyID, prospect.ClientID).Find(&findProspects).Error; err != nil {
+// 	if db.RowsAffected == 0 {
+// 		prospect.UniqueNO = 1
+// 	} else {
+// 		for i := range findProspects {
+// 			if findProspects[i].UniqueNO != i+1 {
+// 				uniqueNum = i + 1
+// 				break
+// 			}
+// 		}
+// 		prospect.UniqueNO = uniqueNum
+// 	}
+// }
+
+// numString := fmt.Sprintf("%02d", uniqueNum)
+// prospect.ProspectID = "PROSPECT/" + prospect.ProjectTypeID + "/" + prospect.CompanyID + "/" + prospect.ClientID + "/" + numString + "/" + strconv.Itoa(prospect.Year)
+// prospect.ProspectTitle = fmt.Sprintf("%s: %s", prospect.ProspectID, prospect.ProspectName)
