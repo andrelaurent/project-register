@@ -42,6 +42,39 @@ func GetAllClients(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Client Found", "data": clients})
 }
 
+func GetClientByID(c *fiber.Ctx) error {
+	db := database.DB.Db
+	var client models.Client
+
+	id := c.Params("id")
+
+	err := db.Find(&client, "id = ?", id).Error
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Client not found", "data": nil})
+	}
+
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Client retrieved", "data": client})
+}
+
+func SearchClient(c *fiber.Ctx) error {
+	db := database.DB.Db
+	req := new(models.Client)
+	if err := c.BodyParser(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Failed to parse request body",
+		})
+	}
+
+	var clients []models.Client
+	if err := db.Where("client_name LIKE ?", "%"+req.ClientName+"%").Find(&clients).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to search clients",
+		})
+	}
+
+	return c.JSON(clients)
+}
+
 func UpdateClient(c *fiber.Ctx) error {
 
 	type updateClient struct {

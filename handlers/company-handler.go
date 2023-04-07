@@ -50,6 +50,39 @@ func GetAllCompanies(c *fiber.Ctx) error {
 	})
 }
 
+func GetCompanyByID(c *fiber.Ctx) error {
+	db := database.DB.Db
+	var company models.Company
+
+	id := c.Params("id")
+
+	err := db.Find(&company, "id = ?", id).Error
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "company not found", "data": nil})
+	}
+
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "company retrieved", "data": company})
+}
+
+func SearchCompany(c *fiber.Ctx) error {
+	db := database.DB.Db
+	req := new(models.Company)
+	if err := c.BodyParser(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Failed to parse request body",
+		})
+	}
+
+	var companys []models.Company
+	if err := db.Where("company_name LIKE ?", "%"+req.CompanyName+"%").Find(&companys).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to search companys",
+		})
+	}
+
+	return c.JSON(companys)
+}
+
 func UpdateCompany(c *fiber.Ctx) error {
 
 	type updatecompany struct {

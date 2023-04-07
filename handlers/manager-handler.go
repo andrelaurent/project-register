@@ -36,6 +36,39 @@ func GetAllManagers(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{"status": "sucess", "message": "Manager Found", "data": managers})
 }
 
+func GetmanagerByID(c *fiber.Ctx) error {
+	db := database.DB.Db
+	var manager models.Manager
+
+	id := c.Params("id")
+
+	err := db.Find(&manager, "id = ?", id).Error
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "manager not found", "data": nil})
+	}
+
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "manager retrieved", "data": manager})
+}
+
+func Searchmanager(c *fiber.Ctx) error {
+	db := database.DB.Db
+	req := new(models.Manager)
+	if err := c.BodyParser(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Failed to parse request body",
+		})
+	}
+
+	var managers []models.Manager
+	if err := db.Where("manager_name LIKE ?", "%"+req.ManagerName+"%").Find(&managers).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to search managers",
+		})
+	}
+
+	return c.JSON(managers)
+}
+
 func UpdateManager(c *fiber.Ctx) error {
 
 	type updatemanager struct {
