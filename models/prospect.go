@@ -19,6 +19,7 @@ type Prospect struct {
 	Company        Company     `json:"company" gorm:"not null"`
 	ClientID       string      `json:"client_id" gorm:"index;not null"`
 	Client         Client      `json:"client" gorm:"not null"`
+	IsDeleted      bool        `json:"is_deleted" gorm:"not null"`
 	Jira           bool        `json:"jira" gorm:"not null"`
 	Clockify       bool        `json:"clockify" gorm:"not null"`
 	Pcs            bool        `json:"pcs" gorm:"not null"`

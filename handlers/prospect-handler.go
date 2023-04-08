@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
@@ -78,6 +79,7 @@ func CreateProspect(c *fiber.Ctx) error {
 	prospect.UniqueNO = uniqueNum
 	prospect.ProspectID = prospectId
 	prospect.ProspectTitle = prospectTitle
+	prospect.IsDeleted = false
 
 	if err := db.Create(&prospect).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -249,6 +251,45 @@ func UpdateProspect(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(prospect)
+}
+
+func DeleteProspect(c *fiber.Ctx) error {
+	db := database.DB.Db
+
+	type DeleteRequest struct {
+		ID string `json:"ID"`
+	}
+	var prospect models.Prospect
+	var id DeleteRequest
+
+	if err := c.BodyParser(&id); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Invalid input",
+			"data":    nil,
+		})
+	}
+	result := db.Find(&prospect, "prospect_id = ?", id.ID)
+	if result.Error != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Prospect not found",
+			"data":    nil,
+		})
+	}
+
+	if err := db.Model(&prospect).Updates(map[string]interface{}{"deleted_at": time.Now(), "is_deleted": true}).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Failed to delete prospect",
+			"data":    nil,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "prospect deleted",
+	})
 }
 
 // UPDATE PROSPECT LOOP DATA
