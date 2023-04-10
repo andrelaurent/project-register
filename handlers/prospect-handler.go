@@ -99,29 +99,10 @@ func CreateProspect(c *fiber.Ctx) error {
 	}
 	prospect.ProjectType = projectType
 
-	// var uniqueNum int
-	// var findProspect models.Prospect
-	// if err := db.Order("unique_no DESC").Where("project_type_id = ? AND year = ? AND company_id = ? AND client_id = ?", prospect.ProjectTypeID, prospect.Year, prospect.CompanyID, prospect.ClientID).First(&findProspect).Error; err != nil {
-	// 	if !errors.Is(err, gorm.ErrRecordNotFound) {
-	// 		uniqueNum = 1
-	// 	}
-	// }
-
-	// uniqueNum = findProspect.UniqueNO + 1
-	// numString := fmt.Sprintf("%02d", uniqueNum)
-	// prospectId := "PROSPECT/" + prospect.ProjectTypeID + "/" + prospect.CompanyID + "/" + prospect.ClientID + "/" + numString + "/" + strconv.Itoa(prospect.Year)
-	// prospectTitle := fmt.Sprintf("%s: %s", prospectId, prospect.ProspectName)
-
-	// prospect.UniqueNO = uniqueNum
-	// prospect.ProspectID = prospectId
-	// prospect.ProspectTitle = prospectTitle
-	// prospect.IsDeleted = false
-
 	uniqueNumber, err := getNextUniqueNumber(db, prospect.ProjectTypeID, prospect.Year, prospect.CompanyID, prospect.ClientID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to create prospect",
-			// "error":   c.JSON(err),
 		})
 	}
 
@@ -133,49 +114,6 @@ func CreateProspect(c *fiber.Ctx) error {
 	prospect.ProspectID = prospectId
 	prospect.ProspectTitle = prospectTitle
 	prospect.IsDeleted = false
-
-	// var maxUniqueNumber int
-	// var vacantNumbers []int
-	// var prospects []models.Prospect
-
-	// err := db.Model(&prospect).Select("MAX(unique_no)").Where("project_type_id = ? AND year = ? AND company_id = ? AND client_id = ?", prospect.ProjectTypeID, prospect.Year, prospect.CompanyID, prospect.ClientID).Row().Scan(&maxUniqueNumber)
-	// if err != nil && err != gorm.ErrRecordNotFound {
-	// 	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-	// 		"message": "Failed to create prospect",
-	// 	})
-	// }
-	// err = db.Where("project_type_id = ? AND year = ? AND company_id = ? AND client_id = ?", prospect.ProjectTypeID, prospect.Year, prospect.CompanyID, prospect.ClientID).Order("unique_no ASC").Find(&prospects).Error
-	// if err != nil {
-	// 	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-	// 		"message": "Failed to create prospect",
-	// 	})
-	// }
-	// for i := 0; i < len(prospects); i++ {
-	// 	if prospects[i].UniqueNO > maxUniqueNumber+1 {
-	// 		break
-	// 	}
-	// 	if prospects[i].UniqueNO == maxUniqueNumber+1 {
-	// 		maxUniqueNumber = prospects[i].UniqueNO
-	// 	} else {
-	// 		vacantNumbers = append(vacantNumbers, prospects[i].UniqueNO)
-	// 	}
-	// }
-	// var nextUniqueNumber int
-	// if len(vacantNumbers) > 0 {
-	// 	nextUniqueNumber = vacantNumbers[0]
-	// } else {
-	// 	nextUniqueNumber = maxUniqueNumber + 1
-	// }
-
-	// uniqueNum = nextUniqueNumber
-	// numString := fmt.Sprintf("%02d", uniqueNum)
-	// prospectId := "PROSPECT/" + prospect.ProjectTypeID + "/" + prospect.CompanyID + "/" + prospect.ClientID + "/" + numString + "/" + strconv.Itoa(prospect.Year)
-	// prospectTitle := fmt.Sprintf("%s: %s", prospectId, prospect.ProspectName)
-
-	// prospect.UniqueNO = uniqueNum
-	// prospect.ProspectID = prospectId
-	// prospect.ProspectTitle = prospectTitle
-	// prospect.IsDeleted = false
 
 	if err := db.Create(&prospect).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -330,25 +268,11 @@ func UpdateProspect(c *fiber.Ctx) error {
 		prospect.Pms = val.(bool)
 	}
 	if isPresent {
-		// var uniqueNum int
-		// var findProspect models.Prospect
-
-		// if err := db.Order("unique_no DESC").Where("project_type_id = ? AND year = ? AND company_id = ? AND client_id = ?", prospect.ProjectTypeID, prospect.Year, prospect.CompanyID, prospect.ClientID).First(&findProspect).Error; err != nil {
-		// 	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		// 		uniqueNum = 1
-		// 	}
-		// }
-
-		// uniqueNum = findProspect.UniqueNO + 1
-		// prospect.UniqueNO = uniqueNum
-		// numString := fmt.Sprintf("%02d", uniqueNum)
-		// prospect.ProspectID = "PROSPECT/" + prospect.ProjectTypeID + "/" + prospect.CompanyID + "/" + prospect.ClientID + "/" + numString + "/" + strconv.Itoa(prospect.Year)
 
 		uniqueNumber, err := getNextUniqueNumber(db, prospect.ProjectTypeID, prospect.Year, prospect.CompanyID, prospect.ClientID)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"message": "Failed to create prospect",
-				// "error":   c.JSON(err),
 			})
 		}
 
@@ -451,34 +375,3 @@ func DeleteProspectFromSystem(c *fiber.Ctx) error {
 		"message": "prospect deleted",
 	})
 }
-
-// UPDATE PROSPECT LOOP DATA
-
-// if err := db.Save(&prospect).Error; err != nil {
-// 	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-// 		"status":  "error",
-// 		"message": "Failed to update prospect",
-// 		"data":    nil,
-// 	})
-// }
-
-// var uniqueNum int
-// var findProspects []models.Prospect
-
-// if err := db.Order("unique_no ASC").Where("project_type_id = ? AND year = ? AND company_id = ? AND client_id = ?", prospect.ProjectTypeID, prospect.Year, prospect.CompanyID, prospect.ClientID).Find(&findProspects).Error; err != nil {
-// 	if db.RowsAffected == 0 {
-// 		uniqueNum = 1
-// 	} else {
-// 		for i := range findProspects {
-// 			if findProspects[i].UniqueNO != i+2 {
-// 				uniqueNum = i + 2
-// 				break
-// 			}
-// 		}
-// 	}
-// }
-
-// prospect.UniqueNO = uniqueNum
-// numString := fmt.Sprintf("%02d", uniqueNum)
-// prospect.ProspectID = "PROSPECT/" + prospect.ProjectTypeID + "/" + prospect.CompanyID + "/" + prospect.ClientID + "/" + numString + "/" + strconv.Itoa(prospect.Year)
-// prospect.ProspectTitle = fmt.Sprintf("%s: %s", prospect.ProspectID, prospect.ProspectName)
