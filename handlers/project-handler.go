@@ -108,8 +108,9 @@ func GetAllProjects(c *fiber.Ctx) error {
 	db := database.DB.Db
 
 	var projects []models.Project
-
-	db.Preload("Company").Preload("ProjectType").Preload("Client").Preload("Prospect").Find(&projects)
+	db.Preload("Company").Preload("ProjectType").Preload("Client").Preload("Prospect", func(db *gorm.DB) *gorm.DB {
+		return db.Preload("Company").Preload("ProjectType").Preload("Client")
+	}).Find(&projects)
 
 	if len(projects) == 0 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
