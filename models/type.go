@@ -4,6 +4,7 @@ import "gorm.io/gorm"
 
 type ProjectType struct {
 	gorm.Model
-	ProjectTypeID   string `json:"ID" gorm:"primaryKey;column:id;not null;default:null"`
-	ProjectTypeName string `json:"name" gorm:"not null;default:null"`
+	ID          uint   `json:"ID" gorm:"primaryKey;autoIncrement"`
+	ProjectTypeID   string `json:"project_type_code"`
+	ProjectTypeName string `json:"project_name"`
 }

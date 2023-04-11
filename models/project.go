@@ -8,7 +8,7 @@ type Project struct {
 	ProjectID     string      `json:"project_id" gorm:"not null"`
 	ProjectTypeID string      `json:"type_id" gorm:"index;not null"`
 	ProjectType   ProjectType `json:"project_type" gorm:"not null"`
-	ProjectName   string      `json:"name" gorm:"not null"`
+	ProjectName   string      `json:"project_name" gorm:"not null"`
 	UniqueNO      int         `json:"no" gorm:"not null"`
 	Year          int         `json:"year" gorm:"not null"`
 	Pic           string      `json:"manager" gorm:"not null"`

@@ -232,7 +232,7 @@ func UpdateProspect(c *fiber.Ctx) error {
 				"data":    nil,
 			})
 		}
-		prospect.CompanyID = company.CompanyID
+		prospect.CompanyID = company.CompanyCode
 		prospect.Company = company
 	}
 	if val, ok := input["client_id"]; ok && val.(string) != "" {
