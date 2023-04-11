@@ -193,7 +193,7 @@ func UpdateProspect(c *fiber.Ctx) error {
 				"data":    nil,
 			})
 		}
-		prospect.ProjectTypeID = projectType.ProjectTypeID
+		prospect.ProjectTypeID = projectType.ProjectTypeCode
 		prospect.ProjectType = projectType
 	}
 	if val, ok := input["name"]; ok && val.(string) != "" {
