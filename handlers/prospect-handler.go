@@ -403,6 +403,8 @@ func ConvertToProject(c *fiber.Ctx) error {
 
 	projectId := prospect.ProspectID
 	projectId = strings.ReplaceAll(projectId, "PROSPECT/", "")
+	projectTitle := prospect.ProspectTitle
+	projectTitle = strings.ReplaceAll(projectTitle, "PROSPECT/", "")
 
 	project := models.Project{
 		ProjectID:     projectId,
@@ -413,7 +415,7 @@ func ConvertToProject(c *fiber.Ctx) error {
 		Year:          prospect.Year,
 		Pic:           prospect.Pic,
 		ProjectStatus: prospect.ProspectStatus,
-		ProjectTitle:  prospect.ProspectTitle,
+		ProjectTitle:  projectTitle,
 		ProjectAmount: prospect.ProspectAmount,
 		CompanyID:     prospect.CompanyID,
 		Company:       prospect.Company,
