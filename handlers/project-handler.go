@@ -87,7 +87,7 @@ func CreateProject(c *fiber.Ctx) error {
 	}
 
 	numString := fmt.Sprintf("%02d", uniqueNumber)
-	projectId := project.ProjectType.ProjectTypeID + "/" + project.Company.CompanyCode + "/" + project.Client.ClientCode + "/" + numString + strconv.Itoa(project.Year)
+	projectId := project.ProjectType.ProjectTypeCode + "/" + project.Company.CompanyCode + "/" + project.Client.ClientCode + "/" + numString + strconv.Itoa(project.Year)
 	projectTitle := fmt.Sprintf("%s: %s", projectId, project.ProjectName)
 
 	project.UniqueNO = int(uniqueNumber)
@@ -257,7 +257,7 @@ func UpdateProject(c *fiber.Ctx) error {
 		}
 
 		numString := fmt.Sprintf("%02d", uniqueNumber)
-		prospectId := project.ProjectType.ProjectTypeID + "/" + project.Company.CompanyCode + "/" + project.Client.ClientCode + "/" + numString + "/" + strconv.Itoa(project.Year)
+		prospectId := project.ProjectType.ProjectTypeCode + "/" + project.Company.CompanyCode + "/" + project.Client.ClientCode + "/" + numString + "/" + strconv.Itoa(project.Year)
 		prospectTitle := fmt.Sprintf("%s: %s", prospectId, project.ProjectName)
 
 		project.UniqueNO = int(uniqueNumber)

@@ -21,6 +21,11 @@ func CreateClient(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "Client ID and name are required", "data": nil})
 	}
 
+	var existingClient models.Client
+	if err := db.Where("client_code = ?", client.ClientCode).First(&existingClient).Error; err == nil {
+		return c.Status(409).JSON(fiber.Map{"status": "error", "message": "Client code already exists", "data": nil})
+	}
+
 	err = db.Create(&client).Error
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not create client", "data": err})

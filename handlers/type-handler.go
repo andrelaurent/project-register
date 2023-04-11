@@ -25,31 +25,28 @@ func GetTypes(c *fiber.Ctx) error {
 
 func CreateType(c *fiber.Ctx) error {
 	db := database.DB.Db
-	projectType := new(models.ProjectType)
+	project_type := new(models.ProjectType)
 
-	err := c.BodyParser(projectType)
+	err := c.BodyParser(project_type)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"status": "error", "message": "Something's wrong with your input", "data": err,
-		})
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
 	}
 
-	if projectType.ProjectTypeID == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status": "error", "message": "Id cannot be empty",
-		})
+	if project_type.ProjectTypeCode == "" || project_type.ProjectTypeName == "" {
+		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "project type ID and name are required", "data": nil})
 	}
 
-	err = db.Create(&projectType).Error
+	var existingProjectType models.ProjectType
+	if err := db.Where("project_type_code = ?", project_type.ProjectTypeCode).First(&existingProjectType).Error; err == nil {
+		return c.Status(409).JSON(fiber.Map{"status": "error", "message": "project type code already exists", "data": nil})
+	}
+
+	err = db.Create(&project_type).Error
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"status": "error", "message": "Could not create company", "data": err,
-		})
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not create project type", "data": err})
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"status": "success", "message": "Company has created", "data": projectType,
-	})
+	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "project type has created", "data": project_type})
 }
 
 func UpdateType(c *fiber.Ctx) error {
