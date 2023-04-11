@@ -180,7 +180,7 @@ func UpdateProspect(c *fiber.Ctx) error {
 	if val, ok := input["type_id"]; ok && val.(string) != "" {
 		isPresent = true
 		var projectType models.ProjectType
-		if err := db.First(&projectType, "project_type_id = ?", val.(string)).Error; err != nil {
+		if err := db.First(&projectType, "project_type_code = ?", val.(string)).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 					"status":  "error",
