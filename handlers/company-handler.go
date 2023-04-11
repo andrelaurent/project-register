@@ -21,6 +21,11 @@ func CreateCompany(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "Company ID and name are required", "data": nil})
 	}
 
+	var existingCompany models.Company
+	if err := db.Where("client_code = ?", company.CompanyCode).First(&existingCompany).Error; err == nil {
+		return c.Status(409).JSON(fiber.Map{"status": "error", "message": "Company code already exists", "data": nil})
+	}
+
 	err = db.Create(&company).Error
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
