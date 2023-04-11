@@ -37,4 +37,5 @@ func SetupRoutes(app *fiber.App) {
 	v6.Patch("/update", handlers.UpdateProspect)
 	v6.Delete("/delete", handlers.DeleteProspect)
 	v6.Delete("/system-delete", handlers.DeleteProspectFromSystem)
+	v6.Post("/convert", handlers.ConvertToProject)
 }
