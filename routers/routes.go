@@ -27,14 +27,6 @@ func SetupRoutes(app *fiber.App) {
 	v2.Put("/:id", handlers.UpdateClient)
 	v2.Delete("/:id", handlers.DeleteClientByID)
 
-	v3 := api.Group("/manager")
-	v3.Get("/read", handlers.GetAllManagers)
-	v3.Get("read", handlers.GetManagerByID)
-	v2.Get("/search", handlers.SearchManager)
-	v3.Post("/create", handlers.CreateManager)
-	v3.Put("/:id", handlers.UpdateManager)
-	v3.Delete("/:id", handlers.DeleteManagerByID)
-
 	v5 := api.Group("/projects")
 	v5.Post("/create", handlers.CreateProject)
 	v5.Get("/read", handlers.GetAllProjects)
@@ -43,4 +35,6 @@ func SetupRoutes(app *fiber.App) {
 	v6.Post("/create", handlers.CreateProspect)
 	v6.Get("/read", handlers.GetAllProspects)
 	v6.Patch("/update", handlers.UpdateProspect)
+	v6.Delete("/delete", handlers.DeleteProspect)
+	v6.Delete("/system-delete", handlers.DeleteProspectFromSystem)
 }

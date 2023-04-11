@@ -1,9 +1,9 @@
 package models
 
-import "gorm.io/gorm"
+// import "gorm.io/gorm"
 
-type ProspectManager struct {
-	gorm.Model
-	ManagerID   string `json:"ID" gorm:"primaryKey;column:id;not null"`
-	ManagerName string `json:"name" gorm:"not null"`
-}
+// type ProspectManager struct {
+// 	gorm.Model
+// 	ManagerID   string `json:"ID" gorm:"primaryKey;column:id;not null"`
+// 	ManagerName string `json:"name" gorm:"not null"`
+// }
