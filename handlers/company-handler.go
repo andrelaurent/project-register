@@ -17,7 +17,7 @@ func CreateCompany(c *fiber.Ctx) error {
 		})
 	}
 
-	if company.CompanyID == "" || company.CompanyName == "" {
+	if company.CompanyCode == "" || company.CompanyName == "" {
 		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "Company ID and name are required", "data": nil})
 	}
 

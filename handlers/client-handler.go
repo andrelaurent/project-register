@@ -17,7 +17,7 @@ func CreateClient(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
 	}
 
-	if client.ClientID == "" || client.ClientName == "" {
+	if client.ClientCode == "" || client.ClientName == "" {
 		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "Client ID and name are required", "data": nil})
 	}
 

@@ -209,7 +209,7 @@ func UpdateProspect(c *fiber.Ctx) error {
 				"data":    nil,
 			})
 		}
-		prospect.ClientID = client.ClientID
+		prospect.ClientID = client.ClientCode
 		prospect.Client = client
 	}
 	if val, ok := input["jira"]; ok {

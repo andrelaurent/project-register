@@ -4,6 +4,7 @@ import "gorm.io/gorm"
 
 type Client struct {
 	gorm.Model
-	ClientID   string `json:"ID" gorm:"primaryKey;column:id;"`
+	ID         uint   `json:"ID" gorm:"primaryKey;autoIncrement"`
+	ClientCode string `json:"client_code"`
 	ClientName string `json:"name"`
 }
