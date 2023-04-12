@@ -91,7 +91,8 @@ func SearchCompany(c *fiber.Ctx) error {
 func UpdateCompany(c *fiber.Ctx) error {
 
 	type updatecompany struct {
-		Username string `json:"name"`
+		CompanyCode string `json:"company_code"`
+		CompanyName string `json:"company_name"`
 	}
 
 	db := database.DB.Db
@@ -102,7 +103,7 @@ func UpdateCompany(c *fiber.Ctx) error {
 	db.Find(&company, "id = ?", id)
 
 	if company == (models.Company{}) {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Company not found", "data": nil})
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "company not found", "data": nil})
 	}
 
 	var updatecompanyData updatecompany
@@ -110,11 +111,13 @@ func UpdateCompany(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
 	}
-	company.CompanyName = updatecompanyData.Username
+
+	company.CompanyCode = updatecompanyData.CompanyCode
+	company.CompanyName = updatecompanyData.CompanyName
 
 	db.Save(&company)
 
-	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Companys Found", "data": company})
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "companys Found", "data": company})
 }
 
 func DeleteCompany(c *fiber.Ctx) error {

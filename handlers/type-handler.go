@@ -82,39 +82,36 @@ func CreateType(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "project type has created", "data": projectType})
 }
 
-func UpdateType(c *fiber.Ctx) error {
-	db := database.DB.Db
+func UpdateProjectType(c *fiber.Ctx) error {
 
-	type updateType struct {
-		ProjectTypeName string `json:"name"`
+	type updateProjectType struct {
+		ProjectTypeCode string `json:"project_type_code"`
+		ProjectTypeName string `json:"project_type_name"`
 	}
+
+	db := database.DB.Db
+	var projectType models.ProjectType
 
 	id := c.Params("id")
 
-	var projectType models.ProjectType
 	db.Find(&projectType, "id = ?", id)
 
 	if projectType == (models.ProjectType{}) {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"status": "error", "message": "Type not found",
-		})
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Project type not found", "data": nil})
 	}
 
-	var updatedTypeData updateType
-
-	err := c.BodyParser(&updatedTypeData)
+	var updateProjectTypeData updateProjectType
+	err := c.BodyParser(&updateProjectTypeData)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"status": "error", "message": "Something's wrong with the input", "data": err,
-		})
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
 	}
-	projectType.ProjectTypeName = updatedTypeData.ProjectTypeName
+
+	projectType.ProjectTypeCode = updateProjectTypeData.ProjectTypeCode
+	projectType.ProjectTypeName = updateProjectTypeData.ProjectTypeName
 
 	db.Save(&projectType)
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"status": "success", "message": "type updated", "data": projectType,
-	})
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "project type Found", "data": projectType})
 }
 
 func DeleteProjectType(c *fiber.Ctx) error {

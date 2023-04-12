@@ -81,7 +81,8 @@ func SearchClient(c *fiber.Ctx) error {
 func UpdateClient(c *fiber.Ctx) error {
 
 	type updateClient struct {
-		Username string `json:"name"`
+		ClientCode string `json:"client_code"`
+		ClientName string `json:"client_name"`
 	}
 
 	db := database.DB.Db
@@ -100,7 +101,9 @@ func UpdateClient(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
 	}
-	client.ClientName = updateClientData.Username
+
+	client.ClientCode = updateClientData.ClientCode
+	client.ClientName = updateClientData.ClientName
 
 	db.Save(&client)
 
