@@ -22,7 +22,7 @@ func CreateCompany(c *fiber.Ctx) error {
 	}
 
 	var existingCompany models.Company
-	if err := db.Where("client_code = ?", company.CompanyCode).First(&existingCompany).Error; err == nil {
+	if err := db.Where("company_code = ?", company.CompanyCode).First(&existingCompany).Error; err == nil {
 		return c.Status(409).JSON(fiber.Map{"status": "error", "message": "Company code already exists", "data": nil})
 	}
 
@@ -117,20 +117,37 @@ func UpdateCompany(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Companys Found", "data": company})
 }
 
-func DeleteCompanyByID(c *fiber.Ctx) error {
+func DeleteCompany(c *fiber.Ctx) error {
 	db := database.DB.Db
+	id := c.Params("id")
 	var company models.Company
 
-	id := c.Params("id")
+	result := db.Where("id = ?", id).Delete(&company)
+	if result.Error != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not delete company", "data": result.Error})
+	}
 
-	db.Find(&company, "id = ?", id)
-
-	if company == (models.Company{}) {
+	if result.RowsAffected == 0 {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Company not found", "data": nil})
 	}
-	err := db.Delete(&company, "id = ?", id).Error
-	if err != nil {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Failed to delete company", "data": nil})
+
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Company has been deleted", "data": result.RowsAffected})
+}
+
+func HardDeleteCompany(c *fiber.Ctx) error {
+	db := database.DB.Db
+	id := c.Params("id")
+	var company models.Company
+
+	result := db.Unscoped().Where("id = ?", id).Delete(&company)
+
+	if result.Error != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not delete company", "data": result.Error})
 	}
-	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Company deleted"})
+
+	if result.RowsAffected == 0 {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Company not found", "data": nil})
+	}
+
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Company has been deleted", "data": result.RowsAffected})
 }
