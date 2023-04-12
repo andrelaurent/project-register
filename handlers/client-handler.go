@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"time"
-
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/gofiber/fiber/v2"
@@ -83,7 +81,8 @@ func SearchClient(c *fiber.Ctx) error {
 func UpdateClient(c *fiber.Ctx) error {
 
 	type updateClient struct {
-		Username string `json:"name"`
+		ClientCode string `json:"client_code"`
+		ClientName string `json:"client_name"`
 	}
 
 	db := database.DB.Db
@@ -102,49 +101,45 @@ func UpdateClient(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
 	}
-	client.ClientName = updateClientData.Username
+
+	client.ClientCode = updateClientData.ClientCode
+	client.ClientName = updateClientData.ClientName
 
 	db.Save(&client)
 
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "clients Found", "data": client})
 }
 
-func DeleteClientByID(c *fiber.Ctx) error {
+func DeleteClient(c *fiber.Ctx) error {
 	db := database.DB.Db
-	var client models.Client
-
 	id := c.Params("id")
 
-	db.Find(&client, "id = ?", id)
+	var client models.Client
+	result := db.Where("id = ?", id).Delete(&client)
+	if result.Error != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not delete client", "data": result.Error})
+	}
 
-	if client == (models.Client{}) {
+	if result.RowsAffected == 0 {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Client not found", "data": nil})
 	}
 
-	err := db.Delete(&client, "id = ?", id).Error
-
-	if err != nil {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Failed to delete client", "data": nil})
-	}
-	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Client deleted"})
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Client has been deleted", "data": result.RowsAffected})
 }
 
-func SoftDeleteClientByID(c *fiber.Ctx) error {
+func HardDeleteClient(c *fiber.Ctx) error {
 	db := database.DB.Db
-	var client models.Client
-
 	id := c.Params("id")
 
-	db.Find(&client, "id = ?", id)
+	var client models.Client
+	result := db.Unscoped().Where("id = ?", id).Delete(&client)
+	if result.Error != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not delete client", "data": result.Error})
+	}
 
-	if client == (models.Client{}) {
+	if result.RowsAffected == 0 {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Client not found", "data": nil})
 	}
 
-	err := db.Model(&client).Update("deleted_at", time.Now()).Error
-
-	if err != nil {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Failed to delete client", "data": nil})
-	}
-	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Client soft deleted"})
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Client has been deleted", "data": result.RowsAffected})
 }
