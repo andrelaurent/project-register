@@ -12,6 +12,42 @@ import (
 	"gorm.io/gorm"
 )
 
+func getProjectUniqueNumber(db *gorm.DB, projectTypeID uint, year int, companyID uint, clientID uint) (uint, error) {
+	var maxUniqueNumber, minUniqueNumber uint
+	var vacantNumbers []uint
+
+	var project models.Project
+
+	err := db.Unscoped().Model(&project).Select("MAX(unique_no), MIN(unique_no)").Where("project_type_id = ? AND year = ? AND company_id = ? AND client_id = ?", projectTypeID, year, companyID, clientID).Row().Scan(&maxUniqueNumber, &minUniqueNumber)
+	if maxUniqueNumber == 0 && minUniqueNumber == 0 {
+		return 1, nil
+	} else if err != nil && err != gorm.ErrRecordNotFound {
+		return 0, err
+	}
+	var projects []models.Project
+	err = db.Unscoped().Where("project_type_id = ? AND year = ? AND company_id = ? AND client_id = ?", projectTypeID, year, companyID, clientID).Order("unique_no ASC").Find(&projects).Error
+	if err != nil {
+		return 0, err
+	}
+	for i := int(minUniqueNumber); i <= int(maxUniqueNumber); i++ {
+		found := false
+		for _, project := range projects {
+			if int(i) == project.UniqueNO {
+				found = true
+				break
+			}
+		}
+		if !found {
+			vacantNumbers = append(vacantNumbers, uint(i))
+		}
+	}
+
+	if len(vacantNumbers) > 0 {
+		return vacantNumbers[0], nil
+	}
+	return maxUniqueNumber + 1, nil
+}
+
 func CreateProject(c *fiber.Ctx) error {
 	db := database.DB.Db
 
@@ -79,7 +115,7 @@ func CreateProject(c *fiber.Ctx) error {
 	}
 	project.Prospect = prospect
 
-	uniqueNumber, err := getNextUniqueNumber(db, project.ProjectTypeID, project.Year, project.CompanyID, project.ClientID)
+	uniqueNumber, err := getProjectUniqueNumber(db, project.ProjectTypeID, project.Year, project.CompanyID, project.ClientID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to create project",
@@ -250,7 +286,7 @@ func UpdateProject(c *fiber.Ctx) error {
 		project.Pms = val.(bool)
 	}
 	if isPresent {
-		uniqueNumber, err := getNextUniqueNumber(db, project.ProjectTypeID, project.Year, project.CompanyID, project.ClientID)
+		uniqueNumber, err := getProjectUniqueNumber(db, project.ProjectTypeID, project.Year, project.CompanyID, project.ClientID)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"message": "Failed to create project",
@@ -296,7 +332,7 @@ func DeleteProject(c *fiber.Ctx) error {
 			"data":    nil,
 		})
 	}
-	result := db.Find(&project, "prospect_id = ?", id.ID)
+	result := db.Find(&project, "project_id = ?", id.ID)
 	if result.Error != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"status":  "error",
@@ -336,7 +372,7 @@ func DeleteProjectFromSystem(c *fiber.Ctx) error {
 			"data":    nil,
 		})
 	}
-	result := db.Unscoped().Find(&project, "prospect_id = ?", id.ID)
+	result := db.Unscoped().Find(&project, "project_id = ?", id.ID)
 	if result.Error != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"status":  "error",
@@ -356,5 +392,43 @@ func DeleteProjectFromSystem(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
 		"message": "project deleted",
+	})
+}
+
+func RecoverProject(c *fiber.Ctx) error {
+	db := database.DB.Db
+
+	var request struct {
+		ProjectID string `json:"project_id"`
+	}
+
+	if err := c.BodyParser(&request); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Invalid input",
+			"data":    nil,
+		})
+	}
+
+	var project models.Project
+	if err := db.Unscoped().Where("project_id = ? AND is_deleted = true", request.ProjectID).First(&project).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Project not found",
+			"data":    nil,
+		})
+	}
+
+	if err := db.Unscoped().Model(&project).Updates(map[string]interface{}{"deleted_at": nil, "is_deleted": false}).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Failed to revocer project",
+			"data":    nil,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Project recovered",
 	})
 }
