@@ -62,7 +62,7 @@ func CreateProspect(c *fiber.Ctx) error {
 	}
 
 	var company models.Company
-	if err := db.First(&company, "id = ?", prospect.ClientID).Error; err != nil {
+	if err := db.First(&company, "id = ?", prospect.CompanyID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"message": "Company not found",

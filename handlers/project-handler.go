@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/andrelaurent/project-register/database"
@@ -431,4 +432,39 @@ func RecoverProject(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "Project recovered",
 	})
+}
+
+func SearchProjects(c *fiber.Ctx) error {
+	db := database.DB.Db
+	searchQuery := c.Query("q")
+
+	var projects []models.Project
+
+	if searchQuery != "" {
+		db.Preload("Company").Preload("ProjectType").Preload("Client").Preload("Prospect", func(db *gorm.DB) *gorm.DB {
+			return db.Preload("Company").Preload("ProjectType").Preload("Client")
+		}).Where("LOWER(project_name) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(searchQuery))).Find(&projects)
+	} else {
+		db.Preload("Company").Preload("ProjectType").Preload("Client").Preload("Prospect", func(db *gorm.DB) *gorm.DB {
+			return db.Preload("Company").Preload("ProjectType").Preload("Client")
+		}).Find(&projects)
+	}
+
+	if len(projects) == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "No prospect found",
+			"data":    nil,
+		})
+	}
+
+	totalCount := len(projects)
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Projects found",
+		"size":    totalCount,
+		"data":    projects,
+	})
+
 }
