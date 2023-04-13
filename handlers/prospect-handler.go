@@ -452,3 +452,72 @@ func ConvertToProject(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusCreated).JSON(project)
 }
+
+func RecoverProspect(c *fiber.Ctx) error {
+	db := database.DB.Db
+
+	var request struct {
+		ProspectID string `json:"prospect_id"`
+	}
+
+	if err := c.BodyParser(&request); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Invalid input",
+			"data":    nil,
+		})
+	}
+
+	var prospect models.Prospect
+	if err := db.Unscoped().Where("prospect_id = ? AND is_deleted = true", request.ProspectID).First(&prospect).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Prospect not found",
+			"data":    nil,
+		})
+	}
+
+	if err := db.Unscoped().Model(&prospect).Updates(map[string]interface{}{"deleted_at": nil, "is_deleted": false}).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Failed to revocer prospect",
+			"data":    nil,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Prospect recovered",
+	})
+}
+
+func SearchProspects(c *fiber.Ctx) error {
+	db := database.DB.Db
+	searchQuery := c.Query("q")
+
+	var prospects []models.Prospect
+
+	if searchQuery != "" {
+		db.Preload("ProjectType").Preload("Company").Preload("Client").Where("LOWER(prospect_name) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(searchQuery))).Find(&prospects)
+	} else {
+		db.Preload("ProjectType").Preload("Company").Preload("Client").Find(&prospects)
+	}
+
+	if len(prospects) == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "No prospect found",
+			"data":    nil,
+		})
+	}
+
+	totalCount := len(prospects)
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Projects found",
+		"size":    totalCount,
+		"data":    prospects,
+	})
+
+}
