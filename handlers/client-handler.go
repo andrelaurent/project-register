@@ -143,3 +143,28 @@ func HardDeleteClient(c *fiber.Ctx) error {
 
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Client has been deleted", "data": result.RowsAffected})
 }
+
+func RecoverClient(c *fiber.Ctx) error {
+	db := database.DB.Db
+	var client models.Client
+
+	id := c.Params("id")
+
+	err := db.Find(&client, "id = ?", id).Error
+
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Client not found", "data": nil})
+	}
+
+	if !client.DeletedAt.Time.IsZero() {
+		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "Client is not deleted", "data": nil})
+	}
+
+	err = db.Unscoped().Model(&client).Where("id = ?", id).Update("deleted_at", nil).Error
+
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Failed to reload client", "data": err})
+	}
+
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Client recovered"})
+}
