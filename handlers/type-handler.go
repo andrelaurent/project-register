@@ -149,3 +149,28 @@ func HardDeleteProjectType(c *fiber.Ctx) error {
 
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Project type has been deleted", "data": result.RowsAffected})
 }
+
+func RecoverProjectType(c *fiber.Ctx) error {
+	db := database.DB.Db
+	var projectType models.ProjectType
+
+	id := c.Params("id")
+
+	err := db.Find(&projectType, "id = ?", id).Error
+
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "ProjectType not found", "data": nil})
+	}
+
+	if !projectType.DeletedAt.Time.IsZero() {
+		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "ProjectType is not deleted", "data": nil})
+	}
+
+	err = db.Unscoped().Model(&projectType).Where("id = ?", id).Update("deleted_at", nil).Error
+
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Failed to reload ProjectType", "data": err})
+	}
+
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "ProjectType recovered"})
+}

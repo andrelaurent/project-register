@@ -154,3 +154,29 @@ func HardDeleteCompany(c *fiber.Ctx) error {
 
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Company has been deleted", "data": result.RowsAffected})
 }
+
+
+func RecoverCompany(c *fiber.Ctx) error {
+	db := database.DB.Db
+	var company models.Company
+
+	id := c.Params("id")
+
+	err := db.Find(&company, "id = ?", id).Error
+
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Company not found", "data": nil})
+	}
+
+	if !company.DeletedAt.Time.IsZero() {
+		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "Company is not deleted", "data": nil})
+	}
+
+	err = db.Unscoped().Model(&company).Where("id = ?", id).Update("deleted_at", nil).Error
+
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Failed to reload company", "data": err})
+	}
+
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Company recovered"})
+}
