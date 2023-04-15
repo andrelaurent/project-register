@@ -144,10 +144,19 @@ func CreateProject(c *fiber.Ctx) error {
 func GetAllProjects(c *fiber.Ctx) error {
 	db := database.DB.Db
 
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+
 	var projects []models.Project
-	db.Preload("Company").Preload("ProjectType").Preload("Client").Preload("Prospect", func(db *gorm.DB) *gorm.DB {
+	if err := db.Preload("Company").Preload("ProjectType").Preload("Client").Preload("Prospect", func(db *gorm.DB) *gorm.DB {
 		return db.Preload("Company").Preload("ProjectType").Preload("Client")
-	}).Find(&projects)
+	}).Offset((page - 1) * limit).Limit(limit).Find(&projects).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Could not find projects",
+			"data":    nil,
+		})
+	}
 
 	if len(projects) == 0 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -437,17 +446,19 @@ func RecoverProject(c *fiber.Ctx) error {
 func SearchProjects(c *fiber.Ctx) error {
 	db := database.DB.Db
 	searchQuery := c.Query("q")
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 
 	var projects []models.Project
 
 	if searchQuery != "" {
 		db.Preload("Company").Preload("ProjectType").Preload("Client").Preload("Prospect", func(db *gorm.DB) *gorm.DB {
 			return db.Preload("Company").Preload("ProjectType").Preload("Client")
-		}).Where("LOWER(project_name) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(searchQuery))).Find(&projects)
+		}).Where("LOWER(project_name) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(searchQuery))).Offset((page - 1) * limit).Limit(limit).Find(&projects)
 	} else {
 		db.Preload("Company").Preload("ProjectType").Preload("Client").Preload("Prospect", func(db *gorm.DB) *gorm.DB {
 			return db.Preload("Company").Preload("ProjectType").Preload("Client")
-		}).Find(&projects)
+		}).Offset((page - 1) * limit).Limit(limit).Find(&projects)
 	}
 
 	if len(projects) == 0 {
