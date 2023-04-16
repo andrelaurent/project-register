@@ -62,7 +62,7 @@ func CreateProspect(c *fiber.Ctx) error {
 	}
 
 	var company models.Company
-	if err := db.First(&company, "id = ?", prospect.ClientID).Error; err != nil {
+	if err := db.First(&company, "id = ?", prospect.CompanyID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"message": "Company not found",
@@ -128,8 +128,17 @@ func CreateProspect(c *fiber.Ctx) error {
 func GetAllProspects(c *fiber.Ctx) error {
 	db := database.DB.Db
 
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+
 	var prospects []models.Prospect
-	db.Preload("Company").Preload("ProjectType").Preload("Client").Find(&prospects)
+	if err := db.Preload("Company").Preload("ProjectType").Preload("Client").Offset((page - 1) * limit).Limit(limit).Find(&prospects).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "status":  "error",
+            "message": "Could not find prospects",
+            "data":    nil,
+        })
+	}
 
 	if len(prospects) == 0 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -494,13 +503,15 @@ func RecoverProspect(c *fiber.Ctx) error {
 func SearchProspects(c *fiber.Ctx) error {
 	db := database.DB.Db
 	searchQuery := c.Query("q")
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 
 	var prospects []models.Prospect
 
 	if searchQuery != "" {
-		db.Preload("ProjectType").Preload("Company").Preload("Client").Where("LOWER(prospect_name) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(searchQuery))).Find(&prospects)
+		db.Preload("ProjectType").Preload("Company").Preload("Client").Where("LOWER(prospect_name) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(searchQuery))).Offset((page - 1) * limit).Limit(limit).Find(&prospects)
 	} else {
-		db.Preload("ProjectType").Preload("Company").Preload("Client").Find(&prospects)
+		db.Preload("ProjectType").Preload("Company").Preload("Client").Offset((page - 1) * limit).Limit(limit).Find(&prospects)
 	}
 
 	if len(prospects) == 0 {
