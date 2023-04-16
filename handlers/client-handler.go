@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"math"
+	"strconv"
+
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/gofiber/fiber/v2"
@@ -34,15 +37,40 @@ func CreateClient(c *fiber.Ctx) error {
 
 func GetAllClients(c *fiber.Ctx) error {
 	db := database.DB.Db
+
+	page, err := strconv.Atoi(c.Query("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit := 10
+
+	offset := (page - 1) * limit
+
 	var clients []models.Client
 
-	db.Find(&clients)
+	db.Limit(limit).Offset(offset).Find(&clients)
 
 	if len(clients) == 0 {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Clients not found", "data": nil})
 	}
 
-	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Client Found", "data": clients})
+	var total int64
+	db.Model(&models.Client{}).Count(&total)
+
+	totalPages := int(math.Ceil(float64(total) / float64(limit)))
+
+	response := fiber.Map{
+		"status":      "success",
+		"message":     "Clients Found",
+		"data":        clients,
+		"currentPage": page,
+		"perPage":     limit,
+		"totalPages":  totalPages,
+		"totalItems":  total,
+	}
+
+	return c.Status(200).JSON(response)
 }
 
 func GetClientByID(c *fiber.Ctx) error {
