@@ -30,7 +30,7 @@ func SetupRoutes(app *fiber.App) {
 
 	v3 := api.Group("/type")
 	v3.Post("/create", handlers.CreateType)
-	v3.Get("/read", handlers.GetProjectTypes)
+	v3.Get("/read", handlers.GetAllProjectTypes)
 	v3.Get("/read/:id", handlers.GetProjectTypeByID)
 	v3.Get("/search", handlers.SearchProjectType)
 	v3.Put("/update/:id", handlers.UpdateProjectType)

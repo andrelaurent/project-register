@@ -1,26 +1,53 @@
 package handlers
 
 import (
+	"math"
+	"strconv"
+
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/gofiber/fiber/v2"
 )
 
-func GetProjectTypes(c *fiber.Ctx) error {
+func GetAllProjectTypes(c *fiber.Ctx) error {
 	db := database.DB.Db
-	var projectType []models.ProjectType
 
-	db.Find(&projectType)
-
-	if len(projectType) == 0 {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"status": "error", "message": "no type found", "data": "nil",
-		})
+	page, err := strconv.Atoi(c.Query("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"status": "sucess", "message": "Types Found", "data": projectType,
-	})
+	limit, err := strconv.Atoi(c.Query("limit", "10"))
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+
+	offset := (page - 1) * limit
+
+	var projectTypes []models.ProjectType
+
+	db.Limit(limit).Offset(offset).Find(&projectTypes)
+
+	if len(projectTypes) == 0 {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "ProjectTypess not found", "data": nil})
+	}
+
+	var total int64
+	db.Model(&models.ProjectType{}).Count(&total)
+
+	totalPages := int(math.Ceil(float64(total) / float64(limit)))
+
+	response := fiber.Map{
+		"status":      "success",
+		"message":     "Project Types Found",
+		"data":        projectTypes,
+		"currentPage": page,
+		"perPage":     limit,
+		"totalPages":  totalPages,
+		"totalItems":  total,
+	}
+
+	return c.Status(200).JSON(response)
 }
 
 func GetProjectTypeByID(c *fiber.Ctx) error {
@@ -39,21 +66,54 @@ func GetProjectTypeByID(c *fiber.Ctx) error {
 
 func SearchProjectType(c *fiber.Ctx) error {
 	db := database.DB.Db
-	req := new(models.ProjectType)
-	if err := c.BodyParser(req); err != nil {
+
+	searchQuery := c.Query("keyword")
+	if searchQuery == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed to parse request body",
+			"error": "Search keyword is required",
 		})
 	}
+
+	page, err := strconv.Atoi(c.Query("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(c.Query("limit", "10"))
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+
+	offset := (page - 1) * limit
 
 	var projectTypes []models.ProjectType
-	if err := db.Where("projectType_name LIKE ?", "%"+req.ProjectTypeName+"%").Find(&projectTypes).Error; err != nil {
+	var total int64
+
+	if err := db.Model(&models.ProjectType{}).Where("project_type_name ILIKE ?", "%"+searchQuery+"%").Count(&total).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to search projectTypes",
+			"error": "Failed to search project types",
 		})
 	}
 
-	return c.JSON(projectTypes)
+	if err := db.Limit(limit).Offset(offset).Where("project_type_name ILIKE ?", "%"+searchQuery+"%").Find(&projectTypes).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to search project types",
+		})
+	}
+
+	totalPages := int(math.Ceil(float64(total) / float64(limit)))
+
+	response := fiber.Map{
+		"status":      "success",
+		"message":     "Project Types Found",
+		"data":        projectTypes,
+		"currentPage": page,
+		"perPage":     limit,
+		"totalPages":  totalPages,
+		"totalItems":  total,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response)
 }
 
 func CreateType(c *fiber.Ctx) error {

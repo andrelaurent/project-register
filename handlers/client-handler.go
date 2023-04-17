@@ -43,7 +43,10 @@ func GetAllClients(c *fiber.Ctx) error {
 		page = 1
 	}
 
-	limit := 10
+	limit, err := strconv.Atoi(c.Query("limit", "10"))
+	if err != nil || limit < 1 {
+		limit = 10
+	}
 
 	offset := (page - 1) * limit
 
@@ -89,21 +92,54 @@ func GetClientByID(c *fiber.Ctx) error {
 
 func SearchClient(c *fiber.Ctx) error {
 	db := database.DB.Db
-	req := new(models.Client)
-	if err := c.BodyParser(req); err != nil {
+
+	searchQuery := c.Query("keyword")
+	if searchQuery == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed to parse request body",
+			"error": "Search keyword is required",
 		})
 	}
 
+	page, err := strconv.Atoi(c.Query("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(c.Query("limit", "10"))
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+
+	offset := (page - 1) * limit
+
 	var clients []models.Client
-	if err := db.Where("client_name LIKE ?", "%"+req.ClientName+"%").Find(&clients).Error; err != nil {
+	var total int64
+
+	if err := db.Model(&models.Client{}).Where("client_name ILIKE ?", "%"+searchQuery+"%").Count(&total).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to search clients",
 		})
 	}
 
-	return c.JSON(clients)
+	if err := db.Limit(limit).Offset(offset).Where("client_name ILIKE ?", "%"+searchQuery+"%").Find(&clients).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to search clients",
+		})
+	}
+
+	totalPages := int(math.Ceil(float64(total) / float64(limit)))
+
+	response := fiber.Map{
+		"status":      "success",
+		"message":     "Clients Found",
+		"data":        clients,
+		"currentPage": page,
+		"perPage":     limit,
+		"totalPages":  totalPages,
+		"totalItems":  total,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response)
 }
 
 func UpdateClient(c *fiber.Ctx) error {

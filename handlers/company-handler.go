@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"math"
+	"strconv"
+
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/gofiber/fiber/v2"
@@ -40,19 +43,43 @@ func CreateCompany(c *fiber.Ctx) error {
 
 func GetAllCompanies(c *fiber.Ctx) error {
 	db := database.DB.Db
-	var company []models.Company
 
-	db.Find(&company)
-
-	if len(company) == 0 {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"status": "error", "message": "no company found", "data": "nil",
-		})
+	page, err := strconv.Atoi(c.Query("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"status": "sucess", "message": "Companies Found", "data": company,
-	})
+	limit, err := strconv.Atoi(c.Query("limit", "10"))
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+
+	offset := (page - 1) * limit
+
+	var companies []models.Company
+
+	db.Limit(limit).Offset(offset).Find(&companies)
+
+	if len(companies) == 0 {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Companys not found", "data": nil})
+	}
+
+	var total int64
+	db.Model(&models.Company{}).Count(&total)
+
+	totalPages := int(math.Ceil(float64(total) / float64(limit)))
+
+	response := fiber.Map{
+		"status":      "success",
+		"message":     "Companies Found",
+		"data":        companies,
+		"currentPage": page,
+		"perPage":     limit,
+		"totalPages":  totalPages,
+		"totalItems":  total,
+	}
+
+	return c.Status(200).JSON(response)
 }
 
 func GetCompanyByID(c *fiber.Ctx) error {
@@ -71,21 +98,54 @@ func GetCompanyByID(c *fiber.Ctx) error {
 
 func SearchCompany(c *fiber.Ctx) error {
 	db := database.DB.Db
-	req := new(models.Company)
-	if err := c.BodyParser(req); err != nil {
+
+	searchQuery := c.Query("keyword")
+	if searchQuery == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed to parse request body",
+			"error": "Search keyword is required",
 		})
 	}
 
-	var companys []models.Company
-	if err := db.Where("company_name LIKE ?", "%"+req.CompanyName+"%").Find(&companys).Error; err != nil {
+	page, err := strconv.Atoi(c.Query("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(c.Query("limit", "10"))
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+
+	offset := (page - 1) * limit
+
+	var companies []models.Company
+	var total int64
+
+	if err := db.Model(&models.Company{}).Where("company_name ILIKE ?", "%"+searchQuery+"%").Count(&total).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to search companys",
+			"error": "Failed to search Companys",
 		})
 	}
 
-	return c.JSON(companys)
+	if err := db.Limit(limit).Offset(offset).Where("company_name ILIKE ?", "%"+searchQuery+"%").Find(&companies).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to search Companys",
+		})
+	}
+
+	totalPages := int(math.Ceil(float64(total) / float64(limit)))
+
+	response := fiber.Map{
+		"status":      "success",
+		"message":     "Companys Found",
+		"data":        companies,
+		"currentPage": page,
+		"perPage":     limit,
+		"totalPages":  totalPages,
+		"totalItems":  total,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response)
 }
 
 func UpdateCompany(c *fiber.Ctx) error {
@@ -154,7 +214,6 @@ func HardDeleteCompany(c *fiber.Ctx) error {
 
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Company has been deleted", "data": result.RowsAffected})
 }
-
 
 func RecoverCompany(c *fiber.Ctx) error {
 	db := database.DB.Db
