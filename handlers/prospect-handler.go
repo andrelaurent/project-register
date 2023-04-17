@@ -134,10 +134,10 @@ func GetAllProspects(c *fiber.Ctx) error {
 	var prospects []models.Prospect
 	if err := db.Preload("Company").Preload("ProjectType").Preload("Client").Offset((page - 1) * limit).Limit(limit).Find(&prospects).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-            "status":  "error",
-            "message": "Could not find prospects",
-            "data":    nil,
-        })
+			"status":  "error",
+			"message": "Could not find prospects",
+			"data":    nil,
+		})
 	}
 
 	if len(prospects) == 0 {
@@ -346,7 +346,7 @@ func DeleteProspect(c *fiber.Ctx) error {
 	})
 }
 
-func DeleteProspectFromSystem(c *fiber.Ctx) error {
+func HardDeleteProspect(c *fiber.Ctx) error {
 	db := database.DB.Db
 
 	type DeleteRequest struct {
@@ -531,4 +531,61 @@ func SearchProspects(c *fiber.Ctx) error {
 		"data":    prospects,
 	})
 
+}
+
+func FilterAllProspects(c *fiber.Ctx) error {
+	db := database.DB.Db
+
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+
+	companyID, _ := strconv.Atoi(c.Query("company", "0"))
+	projectTypeID, _ := strconv.Atoi(c.Query("type", "0"))
+	clientID, _ := strconv.Atoi(c.Query("client", "0"))
+	year, _ := strconv.Atoi(c.Query("year", "0"))
+
+	query := db.Model(&models.Prospect{}).Preload("Company").Preload("ProjectType").Preload("Client")
+
+	if companyID != 0 {
+		query = query.Where("company_id = ?", companyID)
+	}
+
+	if projectTypeID != 0 {
+		query = query.Where("project_type_id = ?", projectTypeID)
+	}
+
+	if clientID != 0 {
+		query = query.Where("client_id = ?", clientID)
+	}
+
+	if year != 0 {
+		query = query.Where("year = ?", year)
+	}
+
+	var prospects []models.Prospect
+	if err := query.Offset((page - 1) * limit).Limit(limit).Find(&prospects).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Could not find prospects",
+			"data":    nil,
+		})
+	}
+
+	if len(prospects) == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "No prospect found",
+			"data":    nil,
+		})
+	}
+
+	var totalCount int64
+	query.Model(&models.Prospect{}).Count(&totalCount)
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Prospects found",
+		"size":    totalCount,
+		"data":    prospects,
+	})
 }
