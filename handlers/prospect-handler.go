@@ -304,7 +304,11 @@ func UpdateProspect(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(prospect)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Prospect updated",
+		"data":    nil,
+	})
 }
 
 func DeleteProspect(c *fiber.Ctx) error {
