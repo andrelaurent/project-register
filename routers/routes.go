@@ -8,6 +8,9 @@ import (
 func SetupRoutes(app *fiber.App) {
 	api := app.Group("/api")
 
+	v6 := api.Group("user")
+	v6.Post("/create")
+
 	v1 := api.Group("/company")
 	v1.Post("/create", handlers.CreateCompany)
 	v1.Get("/read", handlers.GetAllCompanies)
@@ -36,7 +39,7 @@ func SetupRoutes(app *fiber.App) {
 	v3.Put("/update/:id", handlers.UpdateProjectType)
 	v3.Delete("/:id", handlers.DeleteProjectType)
 	v3.Delete("/hard/:id", handlers.HardDeleteProjectType)
-	v3.Patch("/recover", handlers.RecoverProjectType)
+	v3.Post("/recover", handlers.RecoverProjectType)
 
 	v4 := api.Group("/projects")
 	v4.Post("/create", handlers.CreateProject)
