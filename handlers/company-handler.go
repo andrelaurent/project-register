@@ -61,7 +61,7 @@ func GetAllCompanies(c *fiber.Ctx) error {
 	db.Limit(limit).Offset(offset).Find(&companies)
 
 	if len(companies) == 0 {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Companys not found", "data": nil})
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Companies not found", "data": nil})
 	}
 
 	var total int64
