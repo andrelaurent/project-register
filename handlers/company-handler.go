@@ -58,7 +58,7 @@ func GetAllCompanies(c *fiber.Ctx) error {
 
 	var companies []models.Company
 
-	db.Limit(limit).Offset(offset).Find(&companies)
+	db.Order("id ASC").Limit(limit).Offset(offset).Find(&companies)
 
 	if len(companies) == 0 {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Companies not found", "data": nil})
@@ -212,30 +212,43 @@ func HardDeleteCompany(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Company not found", "data": nil})
 	}
 
-	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Company has been deleted", "data": result.RowsAffected})
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Company has been deleted from database", "data": result.RowsAffected})
 }
 
 func RecoverCompany(c *fiber.Ctx) error {
 	db := database.DB.Db
+
+	var request struct {
+		CompanyCode string `json:"company_code"`
+	}
+
+	if err := c.BodyParser(&request); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Invalid input",
+			"data":    nil,
+		})
+	}
+
 	var company models.Company
-
-	id := c.Params("id")
-
-	err := db.Find(&company, "id = ?", id).Error
-
-	if err != nil {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Company not found", "data": nil})
+	if err := db.Unscoped().Where("company_code = ? AND deleted_at IS NOT NULL", request.CompanyCode).First(&company).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Company not found",
+			"data":    nil,
+		})
 	}
 
-	if !company.DeletedAt.Time.IsZero() {
-		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "Company is not deleted", "data": nil})
+	if err := db.Unscoped().Model(&company).Update("deleted_at", nil).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Failed to recover company",
+			"data":    nil,
+		})
 	}
 
-	err = db.Unscoped().Model(&company).Where("id = ?", id).Update("deleted_at", nil).Error
-
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Failed to reload company", "data": err})
-	}
-
-	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Company recovered"})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Company recovered",
+	})
 }
