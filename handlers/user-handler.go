@@ -6,6 +6,7 @@ import (
 	"github.com/andrelaurent/project-register/models"
 	"github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v2"
+
 	// "golang.org/x/crypto/scrypt"
 	// "github.com/twystd/tweetnacl-go"
 	"math"
@@ -31,7 +32,7 @@ func UserLogin(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
-		"data":   result,
+		"data":   result.ID,
 	})
 }
 
