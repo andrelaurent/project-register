@@ -1,14 +1,42 @@
 package handlers
 
 import (
-	"math"
-	"strconv"
-
+	// "encoding/base64"
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v2"
+<<<<<<< HEAD
+=======
+	// "golang.org/x/crypto/scrypt"
+	// "github.com/twystd/tweetnacl-go"
+	"math"
+	"strconv"
+>>>>>>> 18ea798d61b698b1dcbab4bc887a15d3190da94a
 )
+
+func UserLogin(c *fiber.Ctx) error {
+	db := database.DB.Db
+
+	var user models.User
+	if err := c.BodyParser(&user); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid request body",
+		})
+	}
+
+	var result models.User
+	if err := db.Where("email = ? AND password = ?", user.Email, user.Password).First(&result).Error; err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Invalid email or password",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+		"data":   result,
+	})
+}
 
 func CreateUser(c *fiber.Ctx) error {
 	db := database.DB.Db
@@ -36,6 +64,7 @@ func CreateUser(c *fiber.Ctx) error {
 		return c.Status(409).JSON(fiber.Map{"status": "error", "message": "User ID already exists", "data": nil})
 	}
 
+	// user.Password = HashPassword(user.Password)
 	err = db.Create(&user).Error
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not create user", "data": err})
@@ -44,6 +73,19 @@ func CreateUser(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "User created", "data": user})
 }
 
+<<<<<<< HEAD
+=======
+// func HashPassword(password string) string {
+// 	decodeUTF8Pass := []byte(password)
+// 	hashPass := secretbox.Hash(decodeUTF8Pass)
+// 	var nonce [24]byte
+// 	var key [32]byte
+// 	encryptedPass := secretbox.Seal(nonce[:], hashPass, &nonce, &key)
+// 	endcodedBase64Pass := base64.StdEncoding.EncodeToString(encryptedPass)
+// 	return endcodedBase64Pass
+// }
+
+>>>>>>> 18ea798d61b698b1dcbab4bc887a15d3190da94a
 func GetAllUsers(c *fiber.Ctx) error {
 	db := database.DB.Db
 
