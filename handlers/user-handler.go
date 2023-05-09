@@ -6,8 +6,8 @@ import (
 
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
-	"github.com/gofiber/fiber/v2"
 	"github.com/asaskevich/govalidator"
+	"github.com/gofiber/fiber/v2"
 )
 
 func CreateUser(c *fiber.Ctx) error {
@@ -19,17 +19,14 @@ func CreateUser(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
 	}
 
-	// Check for required fields
 	if user.Username == "" || user.Email == "" || user.Password == "" {
 		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "Username, email, and password are required", "data": nil})
 	}
 
-	// Check that email is valid
 	if !govalidator.IsEmail(user.Email) {
 		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "Invalid email address", "data": nil})
 	}
 
-	// Check that password is strong enough
 	if len(user.Password) < 8 {
 		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "Password must be at least 8 characters long", "data": nil})
 	}
@@ -46,7 +43,6 @@ func CreateUser(c *fiber.Ctx) error {
 
 	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "User created", "data": user})
 }
-
 
 func GetAllUsers(c *fiber.Ctx) error {
 	db := database.DB.Db
