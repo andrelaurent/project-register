@@ -1,16 +1,17 @@
 package handlers
 
 import (
-	// "encoding/base64"
+	"crypto/sha512"
+	"crypto/subtle"
+	"encoding/base64"
+
+	"math"
+	"strconv"
+
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v2"
-
-	// "golang.org/x/crypto/scrypt"
-	// "github.com/twystd/tweetnacl-go"
-	"math"
-	"strconv"
 )
 
 func UserLogin(c *fiber.Ctx) error {
@@ -24,7 +25,13 @@ func UserLogin(c *fiber.Ctx) error {
 	}
 
 	var result models.User
-	if err := db.Where("email = ? AND password = ?", user.Email, user.Password).First(&result).Error; err != nil {
+	if err := db.Where("email = ?", user.Email).First(&result).Error; err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Invalid email or password",
+		})
+	}
+
+	if !PasswordsMatch(user.Password, result.Password) {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"message": "Invalid email or password",
 		})
@@ -62,7 +69,7 @@ func CreateUser(c *fiber.Ctx) error {
 		return c.Status(409).JSON(fiber.Map{"status": "error", "message": "User ID already exists", "data": nil})
 	}
 
-	// user.Password = HashPassword(user.Password)
+	user.Password = HashPassword(user.Password)
 	err = db.Create(&user).Error
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not create user", "data": err})
@@ -71,15 +78,19 @@ func CreateUser(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "User created", "data": user})
 }
 
-// func HashPassword(password string) string {
-// 	decodeUTF8Pass := []byte(password)
-// 	hashPass := secretbox.Hash(decodeUTF8Pass)
-// 	var nonce [24]byte
-// 	var key [32]byte
-// 	encryptedPass := secretbox.Seal(nonce[:], hashPass, &nonce, &key)
-// 	endcodedBase64Pass := base64.StdEncoding.EncodeToString(encryptedPass)
-// 	return endcodedBase64Pass
-// }
+func PasswordsMatch(password1 string, password2 string) bool {
+	hash1 := sha512.Sum512([]byte(password1))
+	hash2 := sha512.Sum512([]byte(password2))
+
+	return subtle.ConstantTimeCompare(hash1[:], hash2[:]) == 1
+}
+
+func HashPassword(password string) string {
+	hash := sha512.Sum512([]byte(password))
+	encodedHash := base64.StdEncoding.EncodeToString(hash[:])
+
+	return encodedHash
+}
 
 func GetAllUsers(c *fiber.Ctx) error {
 	db := database.DB.Db
