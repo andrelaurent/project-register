@@ -159,6 +159,27 @@ func GetAllProspects(c *fiber.Ctx) error {
 	})
 }
 
+func GetProspect(c *fiber.Ctx) error {
+	db := database.DB.Db
+
+	id := c.Params("id")
+
+	var prospect models.Prospect
+	if err := db.Preload("Company").Preload("ProjectType").Preload("Client").Find(&prospect, "id = ?", id).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "prospect not found",
+			"data":    nil,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Prospects found",
+		"data":    prospect,
+	})
+}
+
 func UpdateProspect(c *fiber.Ctx) error {
 	db := database.DB.Db
 
