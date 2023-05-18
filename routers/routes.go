@@ -11,6 +11,7 @@ func SetupRoutes(app *fiber.App) {
 	v6 := api.Group("/user")
 	v6.Post("/create", handlers.CreateUser)
 	v6.Post("/login", handlers.UserLogin)
+	v6.Get("/read", handlers.GetAllUsers)
 
 	v1 := api.Group("/company")
 	v1.Post("/create", handlers.CreateCompany)
