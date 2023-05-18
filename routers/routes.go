@@ -54,7 +54,7 @@ func SetupRoutes(app *fiber.App) {
 
 	v5 := api.Group("/prospect")
 	v5.Post("/create", handlers.CreateProspect)
-	v5.Get("/read", handlers.FilterAllProspects)
+	v5.Get("/read", handlers.GetAllProspects)
 	v5.Get("/read/:id", handlers.GetProspect)
 	v5.Patch("/update", handlers.UpdateProspect)
 	v5.Delete("/delete", handlers.DeleteProspect)
@@ -62,4 +62,5 @@ func SetupRoutes(app *fiber.App) {
 	v5.Post("/convert", handlers.ConvertToProject)
 	v5.Post("/recover", handlers.RecoverProspect)
 	v5.Get("/search", handlers.SearchProspects)
+	v5.Get("/filter", handlers.FilterAllProspects)
 }

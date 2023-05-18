@@ -128,11 +128,20 @@ func CreateProspect(c *fiber.Ctx) error {
 func GetAllProspects(c *fiber.Ctx) error {
 	db := database.DB.Db
 
-	page, _ := strconv.Atoi(c.Query("page", "1"))
-	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+	// page, _ := strconv.Atoi(c.Query("page", "1"))
+	// limit, _ := strconv.Atoi(c.Query("limit", "10"))
+
+	// var prospects []models.Prospect
+	// if err := db.Preload("Company").Preload("ProjectType").Preload("Client").Offset((page - 1) * limit).Limit(limit).Find(&prospects).Error; err != nil {
+	// 	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+	// 		"status":  "error",
+	// 		"message": "Could not find prospects",
+	// 		"data":    nil,
+	// 	})
+	// }
 
 	var prospects []models.Prospect
-	if err := db.Preload("Company").Preload("ProjectType").Preload("Client").Offset((page - 1) * limit).Limit(limit).Find(&prospects).Error; err != nil {
+	if err := db.Preload("Company").Preload("ProjectType").Preload("Client").Find(&prospects).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
 			"message": "Could not find prospects",
