@@ -230,12 +230,18 @@ func UpdateProspect(c *fiber.Ctx) error {
 	if val, ok := input["prospect_name"]; ok && val.(string) != "" {
 		prospect.ProspectName = val.(string)
 	}
-	if val, ok := input["no"]; ok && val.(int) != 0 {
-		prospect.UniqueNO = val.(int)
-	}
-	if val, ok := input["year"]; ok && val.(int) != 0 {
+	// if val, ok := input["no"]; ok && val.(int) != 0 {
+	// 	prospect.UniqueNO = val.(int)
+	// }
+	// if val, ok := input["year"]; ok && val.(float64) != 0 {
+	// 	isPresent = true
+	// 	prospect.Year = val.(int)
+	// }
+	if val, ok := input["year"]; ok {
 		isPresent = true
-		prospect.Year = val.(int)
+		if year, ok := val.(float64); ok {
+			prospect.Year = int(year)
+		}
 	}
 	if val, ok := input["manager"]; ok && val.(string) != "" {
 		prospect.Pic = val.(string)
