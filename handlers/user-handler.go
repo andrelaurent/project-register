@@ -16,7 +16,6 @@ import (
 
 func UserLogin(c *fiber.Ctx) error {
 	db := database.DB.Db
-
 	var user models.User
 	if err := c.BodyParser(&user); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
