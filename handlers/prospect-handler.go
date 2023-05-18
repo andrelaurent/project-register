@@ -186,10 +186,10 @@ func UpdateProspect(c *fiber.Ctx) error {
 		})
 	}
 
-	if val, ok := input["type_id"]; ok && val.(int) != 0 {
+	if val, ok := input["type_id"]; ok && val.(float64) != 0 {
 		isPresent = true
 		var projectType models.ProjectType
-		if err := db.First(&projectType, "id = ?", val.(int)).Error; err != nil {
+		if err := db.First(&projectType, "id = ?", val.(float64)).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 					"status":  "error",
@@ -225,10 +225,10 @@ func UpdateProspect(c *fiber.Ctx) error {
 	if val, ok := input["amount"]; ok && val.(float64) != 0 {
 		prospect.ProspectAmount = val.(float64)
 	}
-	if val, ok := input["company_id"]; ok && val.(int) != 0 {
+	if val, ok := input["company_id"]; ok && val.(float64) != 0 {
 		isPresent = true
 		var company models.Company
-		if err := db.First(&company, "id = ?", val.(int)).Error; err != nil {
+		if err := db.First(&company, "id = ?", val.(float64)).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 					"status":  "error",
@@ -245,10 +245,10 @@ func UpdateProspect(c *fiber.Ctx) error {
 		prospect.CompanyID = company.ID
 		prospect.Company = company
 	}
-	if val, ok := input["client_id"]; ok && val.(int) != 0 {
+	if val, ok := input["client_id"]; ok && val.(float64) != 0 {
 		isPresent = true
 		var client models.Client
-		if err := db.First(&client, "id = ?", val.(int)).Error; err != nil {
+		if err := db.First(&client, "id = ?", val.(float64)).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 					"status":  "error",
