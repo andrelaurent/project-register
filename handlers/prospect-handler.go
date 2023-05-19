@@ -351,7 +351,7 @@ func DeleteProspect(c *fiber.Ctx) error {
 	db := database.DB.Db
 
 	type DeleteRequest struct {
-		ID string `json:"ID"`
+		ID string `json:"prospect_id"`
 	}
 	var prospect models.Prospect
 	var id DeleteRequest
