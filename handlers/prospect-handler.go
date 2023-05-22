@@ -430,7 +430,7 @@ func ConvertToProject(c *fiber.Ctx) error {
 
 	type RequestId struct {
 		ProspectID string `json:"prospect_id"`
-		TypeID uint `json:"type_id"`
+		TypeID     uint   `json:"type_id"`
 	}
 
 	var id RequestId
@@ -457,20 +457,20 @@ func ConvertToProject(c *fiber.Ctx) error {
 	// projectTitle = strings.ReplaceAll(projectTitle, "PROSPECT/", "")
 
 	var projectType models.ProjectType
-		if err := db.First(&projectType, "id = ?", id.TypeID).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"status":  "error",
-					"message": "Type not found",
-					"data":    nil,
-				})
-			}
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+	if err := db.First(&projectType, "id = ?", id.TypeID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"status":  "error",
-				"message": "Failed to update prospect",
+				"message": "Type not found",
 				"data":    nil,
 			})
 		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Failed to update prospect",
+			"data":    nil,
+		})
+	}
 
 	project := models.Project{
 		// ProjectID:     projectId,
@@ -490,10 +490,10 @@ func ConvertToProject(c *fiber.Ctx) error {
 		ProspectID:    prospect.ProspectID,
 		Prospect:      prospect,
 		// IsDeleted:     false,
-		Jira:          prospect.Jira,
-		Clockify:      prospect.Clockify,
-		Pcs:           prospect.Pcs,
-		Pms:           prospect.Pms,
+		Jira:     prospect.Jira,
+		Clockify: prospect.Clockify,
+		Pcs:      prospect.Pcs,
+		Pms:      prospect.Pms,
 	}
 
 	uniqueNumber, err := getProjectUniqueNumber(db, project.ProjectTypeID, project.Year, project.CompanyID, project.ClientID)
@@ -515,7 +515,6 @@ func ConvertToProject(c *fiber.Ctx) error {
 	if err := db.First(&project, "project_id = ?", projectId).Error; err == nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Project already existed",
-			"data": project,
 		})
 	} else if errors.Is(err, gorm.ErrRecordNotFound) {
 		if err := db.Create(&project).Error; err != nil {
@@ -534,9 +533,9 @@ func ConvertToProject(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"status": "success",
+		"status":  "success",
 		"message": "Prospect converted",
-		"data": project,
+		"data":    project,
 	})
 }
 
