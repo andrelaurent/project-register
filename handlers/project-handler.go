@@ -146,13 +146,10 @@ func CreateProject(c *fiber.Ctx) error {
 func GetAllProjects(c *fiber.Ctx) error {
 	db := database.DB.Db
 
-	page, _ := strconv.Atoi(c.Query("page", "1"))
-	limit, _ := strconv.Atoi(c.Query("limit", "10"))
-
 	var projects []models.Project
 	if err := db.Preload("Company").Preload("ProjectType").Preload("Client").Preload("Prospect", func(db *gorm.DB) *gorm.DB {
 		return db.Preload("Company").Preload("ProjectType").Preload("Client")
-	}).Offset((page - 1) * limit).Limit(limit).Find(&projects).Error; err != nil {
+	}).Find(&projects).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
 			"message": "Could not find projects",
