@@ -10,10 +10,11 @@ import (
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-func getNextUniqueNumber(db *gorm.DB, projectTypeID uint, year int, companyID uint, clientID uint) (uint, error) {
+func getNextUniqueNumber(db *gorm.DB, projectTypeID uint, year int, companyID uint, clientID uuid.UUID) (uint, error) {
 	var maxUniqueNumber, minUniqueNumber uint
 	var vacantNumbers []uint
 

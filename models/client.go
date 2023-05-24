@@ -2,13 +2,14 @@ package models
 
 import (
 	"time"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type Client struct {
 	gorm.Model
-	ID             uint           `json:"ID" gorm:"primaryKey;autoIncrement"`
+	ID             uuid.UUID      `json:"ID" gorm:"type:uuid;primaryKey"`
 	ClientCode     string         `json:"client_code"`
 	ClientName     string         `json:"client_name"`
 	Alias          string         `json:"alias"`

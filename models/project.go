@@ -1,6 +1,9 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
 
 type Project struct {
 	gorm.Model
@@ -17,7 +20,7 @@ type Project struct {
 	ProjectAmount float64     `json:"amount" gorm:"not null"`
 	CompanyID     uint        `json:"company_id" gorm:"index;not null"`
 	Company       Company     `json:"company" gorm:"not null"`
-	ClientID      uint        `json:"client_id" gorm:"index;not null"`
+	ClientID      uuid.UUID        `json:"client_id" gorm:"index;not null;type:uuid"`
 	Client        Client      `json:"client" gorm:"not null"`
 	ProspectID    string      `json:"prospect_id" gorm:"index;not null"`
 	Prospect      Prospect    `json:"prospect" gorm:"not null"`
