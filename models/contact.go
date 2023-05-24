@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -13,5 +15,11 @@ type Contact struct {
 	Emails []string `json:"contact_emails"`
 	Phones []string `json:"contact_phones"`
 	Locations []Locations `json:"contact_locations"`
-	SocialPresence SocialPresence
+	ContactSocialPresence SocialPresence `json:"contact_social_presence"`
+	BirthDate time.Time `json:"birth_date"`
+	Religion string `json:"religion"`
+	Interests []string `json:"interests"`
+	Skills []string `json:"skills"`
+	Educations []string `json:"educations"`
+	Notes string `json:"notes"`
 }
