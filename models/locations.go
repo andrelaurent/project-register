@@ -7,12 +7,15 @@ import (
 
 type Locations struct {
 	gorm.Model
-	Address    string   `json:"address"`
-	City       City     `json:"city"`
-	Province   Province `json:"province"`
-	PostalCode string   `json:"postal_code"`
-	Country    string   `json:"country"`
-	Geo        string   `json:"geo"`
+	ID         uint      `json:"ID"`
+	Address    string    `json:"address"`
+	CityID     uuid.UUID `json:"city_id" gorm:"type:uuid;index"`
+	City       City      `json:"city" gorm:"foreignKey:CityID"`
+	ProvinceID uuid.UUID `json:"province_id" gorm:"type:uuid;index"`
+	Province   Province  `json:"province" gorm:"foreignKey:ProvinceID"`
+	PostalCode string    `json:"postal_code"`
+	Country    string    `json:"country"`
+	Geo        string    `json:"geo"`
 }
 
 type City struct {
