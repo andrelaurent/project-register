@@ -7,9 +7,10 @@ import (
 
 type Locations struct {
 	gorm.Model
+	ID         uint      `json:"ID"`
 	Address    string    `json:"address"`
-	City       uuid.UUID `json:"city"`
-	Province   uuid.UUID `json:"province"`
+	City       City `json:"city"`
+	Province   Province `json:"province"`
 	PostalCode string    `json:"postal_code"`
 	Country    string    `json:"country"`
 	Geo        string    `json:"geo"`

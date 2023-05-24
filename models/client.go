@@ -1,20 +1,22 @@
 package models
 
 import (
+	"time"
+
 	"github.com/andrelaurent/project-register/vendor/github.com/google/uuid"
 	"gorm.io/gorm"
-	"time"
 )
 
 type Client struct {
 	gorm.Model
-	ID         uint        `json:"ID" gorm:"primaryKey;autoIncrement"`
-	ClientCode string      `json:"client_code"`
-	ClientName string      `json:"client_name"`
-	Alias      string      `json:"alias"`
-	Locations  []Locations `json:"locations"`
-	Subsidiary Subsidiary  `json:"subsidiary"`
-	Date       time.Time   `json:"date"`
+	ID             uint           `json:"ID" gorm:"primaryKey;autoIncrement"`
+	ClientCode     string         `json:"client_code"`
+	ClientName     string         `json:"client_name"`
+	Alias          string         `json:"alias"`
+	Locations      []Locations    `json:"locations"`
+	SocialPresence SocialPresence `json:"client_social_presence"`
+	Subsidiary     Subsidiary     `json:"subsidiary"`
+	Date           time.Time      `json:"date"`
 }
 
 type SocialPresence struct {
