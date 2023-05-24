@@ -21,10 +21,11 @@ type Client struct {
 
 type SocialPresence struct {
 	gorm.Model
-	Linkedin string `json:"linkedin"`
-	Facebook string `json:"facebook"`
-	Twitter  string `json:"Twitter"`
-	Other    string `json:"other"`
+	Linkedin string   `json:"linkedin"`
+	Facebook string   `json:"facebook"`
+	Twitter  string   `json:"twitter"`
+	Github   string   `json:"github"`
+	Other    []string `json:"other"`
 }
 
 type Subsidiary struct {
