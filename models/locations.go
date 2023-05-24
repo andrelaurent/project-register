@@ -1,19 +1,19 @@
 package models
 
 import (
-	"github.com/andrelaurent/project-register/vendor/github.com/google/uuid"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type Locations struct {
 	gorm.Model
-	ID         uint      `json:"ID"`
-	Address    string    `json:"address"`
-	City       City `json:"city"`
+	ID         uint     `json:"ID"`
+	Address    string   `json:"address"`
+	City       City     `json:"city"`
 	Province   Province `json:"province"`
-	PostalCode string    `json:"postal_code"`
-	Country    string    `json:"country"`
-	Geo        string    `json:"geo"`
+	PostalCode string   `json:"postal_code"`
+	Country    string   `json:"country"`
+	Geo        string   `json:"geo"`
 }
 
 type City struct {
