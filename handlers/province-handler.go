@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func createProvince(c *fiber.Ctx) error {
+func CreateProvince(c *fiber.Ctx) error {
 	db := database.DB.Db
 	province := new(models.Province)
 
@@ -109,13 +109,13 @@ func SearchProvince(c *fiber.Ctx) error {
 	var Provinces []models.Province
 	var total int64
 
-	if err := db.Model(&models.Province{}).Where("Province_name ILIKE ?", "%"+searchQuery+"%").Count(&total).Error; err != nil {
+	if err := db.Model(&models.Province{}).Where("province_name ILIKE ?", "%"+searchQuery+"%").Count(&total).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to search Provinces",
 		})
 	}
 
-	if err := db.Limit(limit).Offset(offset).Where("Province_name ILIKE ?", "%"+searchQuery+"%").Find(&Provinces).Error; err != nil {
+	if err := db.Limit(limit).Offset(offset).Where("province_name ILIKE ?", "%"+searchQuery+"%").Find(&Provinces).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to search Provinces",
 		})

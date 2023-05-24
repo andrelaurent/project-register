@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func createCity(c *fiber.Ctx) error {
+func CreateCity(c *fiber.Ctx) error {
 	db := database.DB.Db
 	city := new(models.City)
 
@@ -109,13 +109,13 @@ func SearchCity(c *fiber.Ctx) error {
 	var cities []models.City
 	var total int64
 
-	if err := db.Model(&models.City{}).Where("City_name ILIKE ?", "%"+searchQuery+"%").Count(&total).Error; err != nil {
+	if err := db.Model(&models.City{}).Where("city_name ILIKE ?", "%"+searchQuery+"%").Count(&total).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to search Citys",
 		})
 	}
 
-	if err := db.Limit(limit).Offset(offset).Where("City_name ILIKE ?", "%"+searchQuery+"%").Find(&cities).Error; err != nil {
+	if err := db.Limit(limit).Offset(offset).Where("city_name ILIKE ?", "%"+searchQuery+"%").Find(&cities).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to search Citys",
 		})

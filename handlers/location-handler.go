@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func createLocation(c *fiber.Ctx) error {
+func CreateLocation(c *fiber.Ctx) error {
 	db := database.DB.Db
 	location := new(models.Locations)
 
