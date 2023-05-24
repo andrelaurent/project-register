@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"math"
+	"reflect"
 	"strconv"
 
 	"github.com/andrelaurent/project-register/database"
@@ -16,10 +17,6 @@ func CreateClient(c *fiber.Ctx) error {
 	err := c.BodyParser(client)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
-	}
-
-	if client.ClientCode == "" || client.ClientName == "" {
-		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "Client ID and name are required", "data": nil})
 	}
 
 	var existingClient models.Client
@@ -156,8 +153,8 @@ func UpdateClient(c *fiber.Ctx) error {
 
 	db.Find(&client, "id = ?", id)
 
-	if client == (models.Client{}) {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "client not found", "data": nil})
+	if reflect.DeepEqual(client, models.Client{}) {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Client not found", "data": nil})
 	}
 
 	var updateClientData updateClient
