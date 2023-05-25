@@ -9,13 +9,13 @@ import (
 
 type Client struct {
 	gorm.Model
-	ID             uuid.UUID      `json:"ID" gorm:"type:uuid;primaryKey"`
-	ClientCode     string         `json:"client_code"`
-	ClientName     string         `json:"client_name"`
-	Alias          string         `json:"alias"`
-	// Locations      []*Locations    `json:"locations" gorm:"foreignKey:ClientID"`
-	SocialPresence SocialPresence `json:"client_social_presence"`
-	Subsidiary     Subsidiary     `json:"subsidiary"`
+	ID         uuid.UUID `json:"ID" gorm:"type:uuid;primaryKey"`
+	ClientCode string    `json:"client_code"`
+	ClientName string    `json:"client_name"`
+	Alias      string    `json:"alias"`
+	Locations      []*Locations    `json:"locations" gorm:"foreignKey:ClientID"`
+	SocialPresence SocialPresence `json:"client_social_presence" gorm:"embedded"`
+	Subsidiary     Subsidiary     `json:"subsidiary" gorm:"embedded"`
 	Date           time.Time      `json:"date"`
 }
 
@@ -25,12 +25,12 @@ type SocialPresence struct {
 	Facebook string   `json:"facebook"`
 	Twitter  string   `json:"twitter"`
 	Github   string   `json:"github"`
-	Other    []string `json:"other"`
+	Other    []string `json:"other" gorm:"type:text[]"`
 }
 
 type Subsidiary struct {
 	gorm.Model
-	Subsidiaries     []uuid.UUID `gorm:"type:uuid[]"`
-	ImmidiateParents []uuid.UUID `gorm:"type:uuid[]"`
-	UltimateParents  []uuid.UUID `gorm:"type:uuid[]"`
+	Subsidiaries     []uuid.UUID `json:"subsidiaries" gorm:"type:uuid[]"`
+	ImmidiateParents []uuid.UUID `json:"immidiate_parents" gorm:"type:uuid[]"`
+	UltimateParents  []uuid.UUID `json:"ultimate_parents" gorm:"type:uuid[]"`
 }

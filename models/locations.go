@@ -6,12 +6,10 @@ import (
 )
 
 type Locations struct {
-	gorm.Model
-	ID         uint      `json:"ID"`
 	Address    string    `json:"address"`
-	CityID     uuid.UUID `json:"city_id" gorm:"type:uuid;index"`
+	CityID     uuid.UUID `json:"city_id" gorm:"type:uuid"`
 	City       City      `json:"city" gorm:"foreignKey:CityID"`
-	ProvinceID uuid.UUID `json:"province_id" gorm:"type:uuid;index"`
+	ProvinceID uuid.UUID `json:"province_id" gorm:"type:uuid"`
 	Province   Province  `json:"province" gorm:"foreignKey:ProvinceID"`
 	PostalCode string    `json:"postal_code"`
 	Country    string    `json:"country"`
