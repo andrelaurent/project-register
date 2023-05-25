@@ -19,7 +19,7 @@ type Prospect struct {
 	ProspectAmount float64     `json:"amount" gorm:"not null"`
 	CompanyID      uint        `json:"company_id" gorm:"index;not null"`
 	Company        Company     `json:"company" gorm:"not null;"`
-	ClientID       uint        `json:"client_id" gorm:"index;not null;type:uuid"`
+	ClientID       uint        `json:"client_id" gorm:"index;not null"`
 	Client         Client      `json:"client" gorm:"not null;"`
 	IsDeleted      bool        `json:"is_deleted" gorm:"not null"`
 	Jira           bool        `json:"jira" gorm:"not null"`

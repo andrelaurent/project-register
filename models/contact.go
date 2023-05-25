@@ -3,13 +3,12 @@ package models
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type Contact struct {
 	gorm.Model
-	ID                    uuid.UUID      `json:"ID" gorm:"type:uuid;primaryKey"`
+	ID                    uint           `json:"ID" gorm:"primaryKey;autoIncrement"`
 	ContactName           string         `json:"contact_name"`
 	ContactAlias          string         `json:"contact_alias"`
 	Gender                byte           `json:"gender"`
