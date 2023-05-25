@@ -7,7 +7,6 @@ import (
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 )
 
 func CreateProvince(c *fiber.Ctx) error {
@@ -18,8 +17,6 @@ func CreateProvince(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
 	}
-
-	province.ID = uuid.New()
 
 	err = db.Create(&province).Error
 	if err != nil {
