@@ -12,7 +12,8 @@ type Client struct {
 	ClientCode     string         `json:"client_code"`
 	ClientName     string         `json:"client_name"`
 	Alias          string         `json:"alias"`
-	Locations      []*Locations   `json:"locations" gorm:"foreignKey:ClientID"`
+	Locations      []Locations    `json:"locations"`
+	Website        string         `json:"website"`
 	SocialPresence SocialPresence `json:"client_social_presence" gorm:"embedded"`
 	Subsidiary     Subsidiary     `json:"subsidiary" gorm:"embedded"`
 	Date           time.Time      `json:"date"`
@@ -29,7 +30,7 @@ type SocialPresence struct {
 
 type Subsidiary struct {
 	gorm.Model
-	Subsidiaries     []string `json:"subsidiaries" gorm:"type:uuid[]"`
-	ImmidiateParents []string `json:"immidiate_parents" gorm:"type:uuid[]"`
-	UltimateParents  []string `json:"ultimate_parents" gorm:"type:uuid[]"`
+	Subsidiaries     []string `json:"subsidiaries" gorm:"type:text[]"`
+	ImmidiateParents []string `json:"immidiate_parents" gorm:"type:text[]"`
+	UltimateParents  []string `json:"ultimate_parents" gorm:"type:text[]"`
 }

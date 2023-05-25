@@ -8,7 +8,6 @@ import (
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 )
 
 func CreateClient(c *fiber.Ctx) error {
@@ -24,8 +23,6 @@ func CreateClient(c *fiber.Ctx) error {
 	if err := db.Where("client_code = ?", client.ClientCode).First(&existingClient).Error; err == nil {
 		return c.Status(409).JSON(fiber.Map{"status": "error", "message": "Client code already exists", "data": nil})
 	}
-
-	client.ID = uuid.New()
 
 	err = db.Create(&client).Error
 	if err != nil {

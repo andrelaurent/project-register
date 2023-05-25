@@ -52,6 +52,7 @@ func Connect() {
 		&models.Contact{},
 		&models.Prospect{},
 		&models.Project{},
+		&models.Locations{},
 	)
 
 	DB = Dbinstance{
