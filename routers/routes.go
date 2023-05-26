@@ -93,4 +93,7 @@ func SetupRoutes(app *fiber.App) {
 	v8.Delete("/:id", handlers.DeleteProvince)
 	v8.Delete("/hard/:id", handlers.HardDeleteProvince)
 	v8.Post("/recover", handlers.RecoverProvince)
+
+	v9 := api.Group("/contact")
+	v9.Post("/create", handlers.CreateContact)
 }

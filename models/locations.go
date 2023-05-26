@@ -6,7 +6,7 @@ import (
 
 type Locations struct {
 	gorm.Model
-	ClientID   uint     `json:"client_id"`
+	ID         uint     `json:"id" gorm:"primaryKey:autoIncrement"`
 	Address    string   `json:"address"`
 	CityID     uint     `json:"city_id"`
 	City       City     `json:"city"`
@@ -15,6 +15,8 @@ type Locations struct {
 	PostalCode string   `json:"postal_code"`
 	Country    string   `json:"country"`
 	Geo        string   `json:"geo"`
+	ClientID uint `json:"client_id"`
+	ContactID uint `json:"contact_id"`
 }
 
 type City struct {

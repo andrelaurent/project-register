@@ -14,7 +14,7 @@ type Contact struct {
 	Gender                byte           `json:"gender"`
 	Emails                []string       `json:"contact_emails" gorm:"type:text[]"`
 	Phones                []string       `json:"contact_phones" gorm:"type:text[]"`
-	// Locations             []Locations    `json:"contact_locations"`
+	Locations             []Locations    `json:"contact_locations"`
 	ContactSocialPresence SocialPresence `json:"contact_social_presence" gorm:"embedded"`
 	BirthDate             time.Time      `json:"birth_date"`
 	Religion              string         `json:"religion"`

@@ -20,7 +20,6 @@ type Client struct {
 }
 
 type SocialPresence struct {
-	gorm.Model
 	Linkedin string   `json:"linkedin"`
 	Facebook string   `json:"facebook"`
 	Twitter  string   `json:"twitter"`

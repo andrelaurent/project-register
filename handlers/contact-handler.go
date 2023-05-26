@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func CreateContact(c fiber.Ctx) error {
+func CreateContact(c *fiber.Ctx) error {
 	db := database.DB.Db
 
 	var contact models.Contact
@@ -15,6 +15,7 @@ func CreateContact(c fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
 			"message": "Invalid body request",
+			"data":    err,
 		})
 	}
 
@@ -31,4 +32,44 @@ func CreateContact(c fiber.Ctx) error {
 		"data":    contact,
 	})
 
+}
+
+func GetAllContacts(c *fiber.Ctx) error {
+	db := database.DB.Db
+
+	var contacts []models.Contact
+
+	if err := db.Order("id ASC").Find(&contacts).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Contacts not found",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "error",
+		"message": "Contacts not found",
+		"data":    contacts,
+	})
+}
+
+func GetContactById(c *fiber.Ctx) error {
+	db := database.DB.Db
+
+	var contact models.Contact
+	id := c.Params("id")
+
+	if err := db.Find(&contact, "id = ?", id).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Contact not found",
+			"data":    nil,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Prospects found",
+		"data":    contact,
+	})
 }
