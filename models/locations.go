@@ -8,15 +8,15 @@ type Locations struct {
 	gorm.Model
 	ID         uint     `json:"id" gorm:"primaryKey:autoIncrement"`
 	Address    string   `json:"address"`
-	CityID     uint     `json:"city_id"`
+	CityID     uint     `json:"city_id" gorm:"index"`
 	City       City     `json:"city"`
-	ProvinceID uint     `json:"province_id"`
+	ProvinceID uint     `json:"province_id" gorm:"index"`
 	Province   Province `json:"province"`
 	PostalCode string   `json:"postal_code"`
 	Country    string   `json:"country"`
 	Geo        string   `json:"geo"`
-	ClientID uint `json:"client_id"`
-	ContactID uint `json:"contact_id"`
+	ClientID   *uint    `json:"client_id"`
+	ContactID  *uint    `json:"contact_id"`
 }
 
 type City struct {

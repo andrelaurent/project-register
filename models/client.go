@@ -12,7 +12,7 @@ type Client struct {
 	ClientCode     string         `json:"client_code"`
 	ClientName     string         `json:"client_name"`
 	Alias          string         `json:"alias"`
-	Locations      []Locations    `json:"locations"`
+	LocationIDs    []uint         `json:"location_ids" gorm:"type:integer[]"`
 	Website        string         `json:"website"`
 	SocialPresence SocialPresence `json:"client_social_presence" gorm:"embedded"`
 	Subsidiary     Subsidiary     `json:"subsidiary" gorm:"embedded"`

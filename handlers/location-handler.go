@@ -19,13 +19,19 @@ func CreateLocation(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
 	}
 
+	// Retrieve the whole city and province using the provided IDs
+	db.First(&location.City, location.CityID)
+	db.First(&location.Province, location.ProvinceID)
+
 	err = db.Create(&location).Error
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not create Location", "data": err})
 	}
 
-	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "Location has created", "data": location})
+	// Return the whole location with the populated city and province structs in the success response
+	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "Location has been created", "data": location})
 }
+
 
 func GetAllLocations(c *fiber.Ctx) error {
 	db := database.DB.Db
