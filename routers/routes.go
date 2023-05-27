@@ -96,4 +96,5 @@ func SetupRoutes(app *fiber.App) {
 
 	v9 := api.Group("/contact")
 	v9.Post("/create", handlers.CreateContact)
+	v9.Get("/read", handlers.GetAllContacts)
 }
