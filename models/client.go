@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -15,7 +16,7 @@ type Client struct {
 	LocationIDs    []uint         `json:"location_ids" gorm:"type:integer[]"`
 	Website        string         `json:"website"`
 	SocialPresence SocialPresence `json:"client_social_presence" gorm:"embedded"`
-	Subsidiary     Subsidiary     `json:"subsidiary" gorm:"embedded"`
+	Subsidiary     Subsidiary     `json:"subsidiary" gorm:"embedded type:jsonb"`
 	Date           time.Time      `json:"date"`
 }
 
@@ -29,7 +30,7 @@ type SocialPresence struct {
 
 type Subsidiary struct {
 	gorm.Model
-	Subsidiaries     []string `json:"subsidiaries" gorm:"type:text[]"`
-	ImmidiateParents []string `json:"immidiate_parents" gorm:"type:text[]"`
-	UltimateParents  []string `json:"ultimate_parents" gorm:"type:text[]"`
+	Subsidiaries     pq.StringArray `json:"subsidiaries" gorm:"type:text[]"`
+	ImmidiateParents pq.StringArray `json:"immidiate_parents" gorm:"type:text[]"`
+	UltimateParents  pq.StringArray `json:"ultimate_parents" gorm:"type:text[]"`
 }
