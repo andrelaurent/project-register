@@ -4,6 +4,7 @@ import (
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 func CreateContact(c *fiber.Ctx) error {
@@ -15,14 +16,15 @@ func CreateContact(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
 			"message": "Invalid body request",
-			"data":    err,
+			"data":    err.Error(),
 		})
 	}
 
-	if err := db.Create(&contact); err != nil {
+	if err := db.Create(&contact).Error; err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
 			"message": "Could not create contact",
+			"data":    err.Error(),
 		})
 	}
 
@@ -39,7 +41,9 @@ func GetAllContacts(c *fiber.Ctx) error {
 
 	var contacts []models.Contact
 
-	if err := db.Order("id ASC").Find(&contacts).Error; err != nil {
+	if err := db.Order("id ASC").Preload("Locations", func(db *gorm.DB) *gorm.DB {
+		return db.Preload("City").Preload("Province")
+	}).Find(&contacts).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"status":  "error",
 			"message": "Contacts not found",
@@ -59,7 +63,9 @@ func GetContactById(c *fiber.Ctx) error {
 	var contact models.Contact
 	id := c.Params("id")
 
-	if err := db.Find(&contact, "id = ?", id).Error; err != nil {
+	if err := db.Preload("Locations", func(db *gorm.DB) *gorm.DB {
+		return db.Preload("City").Preload("Province")
+	}).Find(&contact, "id = ?", id).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
 			"message": "Contact not found",

@@ -25,7 +25,7 @@ type SocialPresence struct {
 	Facebook string   `json:"facebook"`
 	Twitter  string   `json:"twitter"`
 	Github   string   `json:"github"`
-	Other    []string `json:"other" gorm:"type:text[]"`
+	Other    pq.StringArray `json:"other" gorm:"type:text[]"`
 }
 
 type Subsidiary struct {

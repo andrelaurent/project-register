@@ -1,9 +1,9 @@
 package models
 
 import (
-	"time"
-
+	"github.com/lib/pq"
 	"gorm.io/gorm"
+	"time"
 )
 
 type Contact struct {
@@ -12,14 +12,14 @@ type Contact struct {
 	ContactName           string         `json:"contact_name"`
 	ContactAlias          string         `json:"contact_alias"`
 	Gender                byte           `json:"gender"`
-	Emails                []string       `json:"contact_emails" gorm:"type:text[]"`
-	Phones                []string       `json:"contact_phones" gorm:"type:text[]"`
-	Locations             []Locations    `json:"contact_locations"`
+	Emails                pq.StringArray `json:"contact_emails" gorm:"type:text[]"`
+	Phones                pq.StringArray `json:"contact_phones" gorm:"type:text[]"`
 	ContactSocialPresence SocialPresence `json:"contact_social_presence" gorm:"embedded"`
 	BirthDate             time.Time      `json:"birth_date"`
 	Religion              string         `json:"religion"`
-	Interests             []string       `json:"interests" gorm:"type:text[]"`
-	Skills                []string       `json:"skills" gorm:"type:text[]"`
-	Educations            []string       `json:"educations" gorm:"type:text[]"`
+	Interests             pq.StringArray `json:"interests" gorm:"type:text[]"`
+	Skills                pq.StringArray `json:"skills" gorm:"type:text[]"`
+	Educations            pq.StringArray `json:"educations" gorm:"type:text[]"`
 	Notes                 string         `json:"notes"`
+	Locations             []Locations    `json:"locations"`
 }
