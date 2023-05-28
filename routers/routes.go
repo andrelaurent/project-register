@@ -99,4 +99,8 @@ func SetupRoutes(app *fiber.App) {
 	v9.Get("/read", handlers.GetAllContacts)
 	v9.Patch("/update/:id", handlers.UpdateContact)
 	v9.Delete("/delete/soft/:id", handlers.SoftDeleteContact)
+
+	v10 := api.Group("/clientcontact")
+	v10.Post("/create", handlers.CreateClientContact)
+	v10.Get("/read", handlers.GetAllClientContacts)
 }

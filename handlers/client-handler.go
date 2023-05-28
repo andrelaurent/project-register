@@ -8,6 +8,7 @@ import (
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 func CreateClient(c *fiber.Ctx) error {
@@ -49,7 +50,16 @@ func GetAllClients(c *fiber.Ctx) error {
 
 	var clients []models.Client
 
-	db.Order("id ASC").Limit(limit).Offset(offset).Find(&clients)
+	if err := db.Order("id ASC").Limit(limit).Offset(offset).Find(&clients).Preload("Locations", func(db *gorm.DB) *gorm.DB {
+		return db.Preload("City").Preload("Province")
+	}).Find(&clients).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Contacts not found",
+		})
+	}
+
+	// db.Order("id ASC").Limit(limit).Offset(offset).Find(&clients)
 
 	if len(clients) == 0 {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Clients not found", "data": nil})
