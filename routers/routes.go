@@ -28,10 +28,10 @@ func SetupRoutes(app *fiber.App) {
 	v2.Get("/read", handlers.GetAllClients)
 	v2.Get("/read/:id", handlers.GetClientByID)
 	v2.Get("/search", handlers.SearchClient)
-	v2.Put("/:id", handlers.UpdateClient)
+	// v2.Put("/:id", handlers.UpdateClient)
 	v2.Delete("/:id", handlers.DeleteClient)
 	v2.Delete("/hard/:id", handlers.HardDeleteClient)
-	v2.Post("/recover", handlers.RecoverClient)
+	// v2.Post("/recover", handlers.RecoverClient)
 
 	v3 := api.Group("/type")
 	v3.Post("/create", handlers.CreateType)

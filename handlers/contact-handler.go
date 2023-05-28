@@ -268,7 +268,7 @@ func SoftDeleteContact(c *fiber.Ctx) error {
 	if err := db.Model(&locations).Where("contact_id = ?", contact.ID).Update("deleted_at", time.Now()).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
-			"message": "Failed to update associated locations",
+			"message": "Failed to delete associated locations",
 			"data":    err.Error(),
 		})
 	}
@@ -298,7 +298,7 @@ func HardDeleteContact(c *fiber.Ctx) error {
 	if err := db.Model(&locations).Where("contact_id = ?", contact.ID).Delete(&locations).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
-			"message": "Failed to update associated locations",
+			"message": "Failed to delete associated locations",
 			"data":    err.Error(),
 		})
 	}
