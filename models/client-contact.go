@@ -12,8 +12,8 @@ type ClientContact struct {
 	ClientID    uint         `json:"client_id"`
 	ContactID   uint         `json:"contact_id"`
 	Employments []Employment `json:"employments"`
-	ClientInfo  ClientInfo   `json:"client_info"`
-	ContactInfo ContactInfo  `json:"contact_info"`
+	ClientInfo  ClientInfo   `json:"client_info" gorm:"embedded"`
+	ContactInfo ContactInfo  `json:"contact_info" gorm:"embedded"`
 }
 
 type Employment struct {
@@ -26,12 +26,10 @@ type Employment struct {
 }
 
 type ClientInfo struct {
-	Name            string `json:"name"`
-	ClientContactID uint   `json:"client_contact_id"`
+	ClientName string `json:"client_name"`
 }
 
 type ContactInfo struct {
-	Name            string    `json:"name"`
-	BirthDate       time.Time `json:"birth_date"`
-	ClientContactID uint      `json:"client_contact_id"`
+	ContactName string    `json:"contact_name"`
+	BirthDate   time.Time `json:"birth_date"`
 }
