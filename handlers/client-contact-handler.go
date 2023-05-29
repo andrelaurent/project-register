@@ -3,29 +3,43 @@ package handlers
 import (
 	"math"
 	"strconv"
-	"time"
 
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
 func CreateClientContact(c *fiber.Ctx) error {
 	db := database.DB.Db
-	ClientContact := new(models.ClientContact)
+	clientContact := new(models.ClientContact)
 
-	err := c.BodyParser(ClientContact)
+	err := c.BodyParser(clientContact)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
 	}
 
-	err = db.Create(&ClientContact).Error
+	client := new(models.Client)
+	err = db.First(client, clientContact.ClientID).Error
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not retrieve client info", "data": err})
+	}
+
+	contact := new(models.Contact)
+	err = db.First(contact, clientContact.ContactID).Error
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not retrieve contact info", "data": err})
+	}
+
+	clientContact.ClientInfo.ClientName = client.ClientName
+	clientContact.ContactInfo.ContactName = contact.ContactName
+	clientContact.ContactInfo.BirthDate = contact.BirthDate
+
+	err = db.Create(&clientContact).Error
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not create client contact", "data": err})
 	}
 
-	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "Client contact has created", "data": ClientContact})
+	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "Client contact has been created", "data": clientContact})
 }
 
 func GetAllClientContacts(c *fiber.Ctx) error {
@@ -45,18 +59,10 @@ func GetAllClientContacts(c *fiber.Ctx) error {
 
 	var clientContacts []models.ClientContact
 
-	db.Preload("ClientInfo").Preload("ContactInfo").Order("id ASC").Limit(limit).Offset(offset).Find(&clientContacts)
+	db.Order("id ASC").Limit(limit).Offset(offset).Find(&clientContacts)
 
 	if len(clientContacts) == 0 {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Client contacts not found", "data": nil})
-	}
-
-	// Loop through the client contacts and populate the client info and contact info names and birth dates
-	for i := range clientContacts {
-		client := clientContacts[i]
-		client.ClientInfo.Name = getClientNameByID(db, client.ClientID)
-		client.ContactInfo.Name, client.ContactInfo.BirthDate = getContactInfoByID(db, client.ContactID)
-		clientContacts[i] = client
 	}
 
 	var total int64
@@ -77,18 +83,6 @@ func GetAllClientContacts(c *fiber.Ctx) error {
 	return c.Status(200).JSON(response)
 }
 
-func getClientNameByID(db *gorm.DB, clientID uint) string {
-	var client models.Client
-	db.Select("client_name").First(&client, clientID)
-	return client.ClientName
-}
-
-func getContactInfoByID(db *gorm.DB, contactID uint) (string, time.Time) {
-	var contact models.Contact
-	db.Select("contact_name, birth_date").First(&contact, contactID)
-	return contact.ContactName, contact.BirthDate
-}
-
 func GetClientContactByID(c *fiber.Ctx) error {
 	db := database.DB.Db
 	var ClientContact models.ClientContact
@@ -100,7 +94,7 @@ func GetClientContactByID(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Client contact not found", "data": nil})
 	}
 
-	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Client c mv ./ ,                          jnjnjijnijnokmokmpll,ppl,,,pl,okmijnijnijnijijnijnijnijninijnijnokmokmokmijnuhbuhbijnokmijnuhbnijnlkokmijnuhbbhunjimkookmontact retrieved", "data": ClientContact})
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Client contact retrieved", "data": ClientContact})
 }
 
 func SearchClientContact(c *fiber.Ctx) error {
