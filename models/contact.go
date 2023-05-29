@@ -1,9 +1,10 @@
 package models
 
 import (
+	"time"
+
 	"github.com/lib/pq"
 	"gorm.io/gorm"
-	"time"
 )
 
 type Contact struct {
@@ -11,7 +12,7 @@ type Contact struct {
 	ID                    uint           `json:"ID" gorm:"primaryKey;autoIncrement"`
 	ContactName           string         `json:"contact_name"`
 	ContactAlias          string         `json:"contact_alias"`
-	Gender                byte           `json:"gender"`
+	Gender                string         `json:"gender"`
 	Emails                pq.StringArray `json:"contact_emails" gorm:"type:text[]"`
 	Phones                pq.StringArray `json:"contact_phones" gorm:"type:text[]"`
 	ContactSocialPresence SocialPresence `json:"contact_social_presence" gorm:"embedded"`

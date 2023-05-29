@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"math"
-	"reflect"
 	"strconv"
 
 	"github.com/andrelaurent/project-register/database"
@@ -36,21 +35,9 @@ func CreateClient(c *fiber.Ctx) error {
 func GetAllClients(c *fiber.Ctx) error {
 	db := database.DB.Db
 
-	page, err := strconv.Atoi(c.Query("page", "1"))
-	if err != nil || page < 1 {
-		page = 1
-	}
-
-	limit, err := strconv.Atoi(c.Query("limit", "10"))
-	if err != nil || limit < 1 {
-		limit = 10
-	}
-
-	offset := (page - 1) * limit
-
 	var clients []models.Client
 
-	if err := db.Order("id ASC").Limit(limit).Offset(offset).Find(&clients).Preload("Locations", func(db *gorm.DB) *gorm.DB {
+	if err := db.Order("id ASC").Find(&clients).Preload("Locations", func(db *gorm.DB) *gorm.DB {
 		return db.Preload("City").Preload("Province")
 	}).Find(&clients).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -59,8 +46,6 @@ func GetAllClients(c *fiber.Ctx) error {
 		})
 	}
 
-	// db.Order("id ASC").Limit(limit).Offset(offset).Find(&clients)
-
 	if len(clients) == 0 {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Clients not found", "data": nil})
 	}
@@ -68,16 +53,11 @@ func GetAllClients(c *fiber.Ctx) error {
 	var total int64
 	db.Model(&models.Client{}).Count(&total)
 
-	totalPages := int(math.Ceil(float64(total) / float64(limit)))
-
 	response := fiber.Map{
-		"status":      "success",
-		"message":     "Clients Found",
-		"data":        clients,
-		"currentPage": page,
-		"perPage":     limit,
-		"totalPages":  totalPages,
-		"totalItems":  total,
+		"status":     "success",
+		"message":    "Clients Found",
+		"data":       clients,
+		"totalItems": total,
 	}
 
 	return c.Status(200).JSON(response)
@@ -89,7 +69,9 @@ func GetClientByID(c *fiber.Ctx) error {
 
 	id := c.Params("id")
 
-	err := db.Find(&client, "id = ?", id).Error
+	err := db.Preload("Locations", func(db *gorm.DB) *gorm.DB {
+		return db.Preload("City").Preload("Province")
+	}).Find(&client, "id = ?", id).Error
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Client not found", "data": nil})
 	}
@@ -149,46 +131,23 @@ func SearchClient(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-func UpdateClient(c *fiber.Ctx) error {
-
-	type updateClient struct {
-		ClientCode string `json:"client_code"`
-		ClientName string `json:"client_name"`
-	}
-
-	db := database.DB.Db
-	var client models.Client
-
-	id := c.Params("id")
-
-	db.Find(&client, "id = ?", id)
-
-	if reflect.DeepEqual(client, models.Client{}) {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Client not found", "data": nil})
-	}
-
-	var updateClientData updateClient
-	err := c.BodyParser(&updateClientData)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
-	}
-
-	client.ClientCode = updateClientData.ClientCode
-	client.ClientName = updateClientData.ClientName
-
-	db.Save(&client)
-
-	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "clients Found", "data": client})
-}
-
 func DeleteClient(c *fiber.Ctx) error {
 	db := database.DB.Db
 	id := c.Params("id")
 
 	var client models.Client
+	var locations models.Locations
 	result := db.Where("id = ?", id).Delete(&client)
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not delete client", "data": result.Error})
+	}
+
+	if err := db.Model(&locations).Where("client_id", client.ID).Delete(&locations).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Failed to delete associated locations",
+			"data":    err.Error(),
+		})
 	}
 
 	if result.RowsAffected == 0 {
@@ -203,9 +162,18 @@ func HardDeleteClient(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	var client models.Client
+	var locations models.Locations
 	result := db.Unscoped().Where("id = ?", id).Delete(&client)
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not delete client", "data": result.Error})
+	}
+
+	if err := db.Model(&locations).Where("client_id", client.ID).Delete(&locations).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Failed to delete associated locations",
+			"data":    err.Error(),
+		})
 	}
 
 	if result.RowsAffected == 0 {
@@ -215,40 +183,40 @@ func HardDeleteClient(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Client has been deleted from database", "data": result.RowsAffected})
 }
 
-func RecoverClient(c *fiber.Ctx) error {
-	db := database.DB.Db
+// func RecoverClient(c *fiber.Ctx) error {
+// 	db := database.DB.Db
 
-	var request struct {
-		ClientCode string `json:"client_code"`
-	}
+// 	var request struct {
+// 		ClientCode string `json:"client_code"`
+// 	}
 
-	if err := c.BodyParser(&request); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "error",
-			"message": "Invalid input",
-			"data":    nil,
-		})
-	}
+// 	if err := c.BodyParser(&request); err != nil {
+// 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+// 			"status":  "error",
+// 			"message": "Invalid input",
+// 			"data":    nil,
+// 		})
+// 	}
 
-	var client models.Client
-	if err := db.Unscoped().Where("client_code = ? AND deleted_at IS NOT NULL", request.ClientCode).First(&client).Error; err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"status":  "error",
-			"message": "Client not found",
-			"data":    nil,
-		})
-	}
+// 	var client models.Client
+// 	if err := db.Unscoped().Where("client_code = ? AND deleted_at IS NOT NULL", request.ClientCode).First(&client).Error; err != nil {
+// 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+// 			"status":  "error",
+// 			"message": "Client not found",
+// 			"data":    nil,
+// 		})
+// 	}
 
-	if err := db.Unscoped().Model(&client).Update("deleted_at", nil).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"status":  "error",
-			"message": "Failed to recover client",
-			"data":    nil,
-		})
-	}
+// 	if err := db.Unscoped().Model(&client).Update("deleted_at", nil).Error; err != nil {
+// 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+// 			"status":  "error",
+// 			"message": "Failed to recover client",
+// 			"data":    nil,
+// 		})
+// 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Client recovered",
-	})
-}
+// 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+// 		"status":  "success",
+// 		"message": "Client recovered",
+// 	})
+// }
