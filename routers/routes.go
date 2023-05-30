@@ -103,4 +103,9 @@ func SetupRoutes(app *fiber.App) {
 	v10 := api.Group("/clientcontact")
 	v10.Post("/create", handlers.CreateClientContact)
 	v10.Get("/read", handlers.GetAllClientContacts)
+
+	v11 := api.Group("/employment")
+	v11.Post("/create", handlers.CreateEmployment)
+	v11.Get("/read", handlers.GetAllEmployments)
+	v11.Delete("/delete", handlers.DeleteEmployment)
 }

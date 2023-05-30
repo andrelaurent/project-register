@@ -26,7 +26,7 @@ func CreateCity(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "city has created", "data": city})
 }
 
-func GetAllCities(c *fiber.Ctx) error {
+func GetAllCities(c *fiber.Ctx) error {                                                                                                                                                                             
 	db := database.DB.Db
 
 	page, err := strconv.Atoi(c.Query("page", "1"))
