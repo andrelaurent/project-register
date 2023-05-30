@@ -97,10 +97,8 @@ func GetContactById(c *fiber.Ctx) error {
 func UpdateContact(c *fiber.Ctx) error {
 	db := database.DB.Db
 
-	// Parse contact ID from the request parameters
 	contactID := c.Params("id")
 
-	// Find the contact to be updated
 	var contact models.Contact
 	if err := db.First(&contact, contactID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -114,7 +112,6 @@ func UpdateContact(c *fiber.Ctx) error {
 		})
 	}
 
-	// Parse the JSON patch data from the request body
 	var patchData map[string]interface{}
 	if err := c.BodyParser(&patchData); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -123,7 +120,6 @@ func UpdateContact(c *fiber.Ctx) error {
 		})
 	}
 
-	// Apply the patch data to the contact model
 	if err := applyPatchData(&contact, patchData); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Failed to apply patch data",
@@ -131,7 +127,6 @@ func UpdateContact(c *fiber.Ctx) error {
 		})
 	}
 
-	// Update the contact in the database
 	if err := db.Save(&contact).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to update contact",
@@ -145,7 +140,6 @@ func UpdateContact(c *fiber.Ctx) error {
 	})
 }
 
-// Helper function to apply the patch data to the contact model
 func applyPatchData(contact *models.Contact, patchData map[string]interface{}) error {
 	for key, value := range patchData {
 		switch key {

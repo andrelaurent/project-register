@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"errors"
 	"math"
 	"strconv"
+	"time"
 
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
@@ -61,6 +63,164 @@ func GetAllClients(c *fiber.Ctx) error {
 	}
 
 	return c.Status(200).JSON(response)
+}
+
+func UpdateClient(c *fiber.Ctx) error {
+	db := database.DB.Db
+
+	var client models.Client
+	id := c.Params("id")
+
+	if err := db.First(&client, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"status":  "error",
+				"message": "Client not found",
+				"data":    nil,
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Failed to retrieve client",
+			"data":    err.Error(),
+		})
+	}
+
+	var updateData map[string]interface{}
+	if err := c.BodyParser(&updateData); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Invalid request payload",
+			"data":    err.Error(),
+		})
+	}
+
+	if err := updateClientFields(&client, updateData); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Failed to update client",
+			"data":    err.Error(),
+		})
+	}
+
+	if err := db.Save(&client).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Failed to save updated client",
+			"data":    err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Client updated",
+		"data":    client,
+	})
+}
+
+func updateClientFields(client *models.Client, updateData map[string]interface{}) error {
+	for key, value := range updateData {
+		switch key {
+		case "client_code":
+			if code, ok := value.(string); ok {
+				client.ClientCode = code
+			}
+		case "client_name":
+			if name, ok := value.(string); ok {
+				client.ClientName = name
+			}
+		case "alias":
+			if alias, ok := value.(string); ok {
+				client.Alias = alias
+			}
+		case "website":
+			if website, ok := value.(string); ok {
+				client.Website = website
+			}
+		case "client_social_presence":
+			if socialPresence, ok := value.(map[string]interface{}); ok {
+				updateSocialPresenceFields(&client.SocialPresence, socialPresence)
+			}
+		case "subsidiary":
+			if subsidiary, ok := value.(map[string]interface{}); ok {
+				updateSubsidiaryFields(&client.Subsidiary, subsidiary)
+			}
+		case "date":
+			if dateStr, ok := value.(string); ok {
+				date, err := time.Parse(time.RFC3339, dateStr)
+				if err == nil {
+					client.Date = date
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func updateSocialPresenceFields(socialPresence *models.SocialPresence, data map[string]interface{}) {
+	for key, value := range data {
+		switch key {
+		case "facebook":
+			if fb, ok := value.(string); ok {
+				socialPresence.Facebook = fb
+			}
+		case "twitter":
+			if twitter, ok := value.(string); ok {
+				socialPresence.Twitter = twitter
+			}
+		case "linkedin":
+			if linkedin, ok := value.(string); ok {
+				socialPresence.Linkedin = linkedin
+			}
+		case "github":
+			if github, ok := value.(string); ok {
+				socialPresence.Github = github
+			}
+		case "other":
+			if other, ok := value.([]interface{}); ok {
+				socialPresence.Other = make([]string, len(other))
+				for i, other := range other {
+					if str, ok := other.(string); ok {
+						socialPresence.Other[i] = str
+					}
+				}
+			}
+		}
+	}
+}
+
+func updateSubsidiaryFields(subsidiary *models.Subsidiary, data map[string]interface{}) {
+	for key, value := range data {
+		switch key {
+		case "subsidiary":
+			if subs, ok := value.([]interface{}); ok {
+				subsidiary.Subsidiaries = make([]string, len(subs))
+				for i, subs := range subs {
+					if str, ok := subs.(string); ok {
+						subsidiary.Subsidiaries[i] = str
+					}
+				}
+			}
+		case "immidiate_parents":
+			if iparents, ok := value.([]interface{}); ok {
+				subsidiary.ImmidiateParents = make([]string, len(iparents))
+				for i, iparents := range iparents {
+					if str, ok := iparents.(string); ok {
+						subsidiary.ImmidiateParents[i] = str
+					}
+				}
+			}
+		case "ultimate_parents":
+			if uparents, ok := value.([]interface{}); ok {
+				subsidiary.UltimateParents = make([]string, len(uparents))
+				for i, uparents := range uparents {
+					if str, ok := uparents.(string); ok {
+						subsidiary.UltimateParents[i] = str
+					}
+				}
+			}
+		}
+	}
 }
 
 func GetClientByID(c *fiber.Ctx) error {
