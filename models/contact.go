@@ -1,8 +1,6 @@
 package models
 
 import (
-	"time"
-
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
@@ -16,7 +14,7 @@ type Contact struct {
 	Emails                pq.StringArray `json:"contact_emails" gorm:"type:text[]"`
 	Phones                pq.StringArray `json:"contact_phones" gorm:"type:text[]"`
 	ContactSocialPresence SocialPresence `json:"contact_social_presence" gorm:"embedded"`
-	BirthDate             time.Time      `json:"birth_date"`
+	BirthDate             string         `json:"birth_date"`
 	Religion              string         `json:"religion"`
 	Interests             pq.StringArray `json:"interests" gorm:"type:text[]"`
 	Skills                pq.StringArray `json:"skills" gorm:"type:text[]"`
