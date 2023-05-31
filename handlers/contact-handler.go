@@ -24,12 +24,12 @@ func CreateContact(c *fiber.Ctx) error {
 		})
 	}
 
-	if contact.Gender != "P" && contact.Gender != "L" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "error",
-			"message": "Gender must be 'P' or 'L'",
-		})
-	}
+	// if contact.Gender != "P" || contact.Gender != "L" || contact.Gender != "Other" {
+	// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+	// 		"status":  "error",
+	// 		"message": "Gender must be 'P' or 'L'",
+	// 	})
+	// }
 
 	if err := db.Create(&contact).Error; err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -198,9 +198,7 @@ func applyPatchData(contact *models.Contact, patchData map[string]interface{}) e
 			}
 		case "birth_date":
 			if str, ok := value.(string); ok {
-				if t, err := time.Parse(time.RFC3339, str); err == nil {
-					contact.BirthDate = t
-				}
+				contact.BirthDate = str
 			}
 		case "religion":
 			if str, ok := value.(string); ok {
