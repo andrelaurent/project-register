@@ -1,8 +1,6 @@
 package models
 
 import (
-	"time"
-
 	"gorm.io/gorm"
 )
 
@@ -18,11 +16,11 @@ type ClientContact struct {
 
 type Employment struct {
 	gorm.Model
-	JobTitle        string    `json:"job_title"`
-	JobStart        time.Time `json:"job_start"`
-	JobEnd          time.Time `json:"job_end"`
-	Status          string    `json:"status"`
-	ClientContactID uint      `json:"client_contact_id"`
+	JobTitle        string `json:"job_title"`
+	JobStart        string `json:"job_start"`
+	JobEnd          string `json:"job_end"`
+	Status          string `json:"status"`
+	ClientContactID uint   `json:"client_contact_id"`
 }
 
 type ClientInfo struct {
@@ -30,6 +28,6 @@ type ClientInfo struct {
 }
 
 type ContactInfo struct {
-	ContactName string    `json:"contact_name"`
-	BirthDate   time.Time `json:"birth_date"`
+	ContactName string `json:"contact_name"`
+	BirthDate   string `json:"birth_date"`
 }

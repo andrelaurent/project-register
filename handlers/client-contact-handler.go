@@ -59,7 +59,7 @@ func GetAllClientContacts(c *fiber.Ctx) error {
 
 	var clientContacts []models.ClientContact
 
-	db.Order("id ASC").Limit(limit).Offset(offset).Find(&clientContacts)
+	db.Order("id ASC").Limit(limit).Offset(offset).Preload("Employments").Find(&clientContacts)
 
 	if len(clientContacts) == 0 {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Client contacts not found", "data": nil})
