@@ -33,6 +33,23 @@ func CreateClient(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "Client has created", "data": client})
 }
 
+func GetLatestClient(c *fiber.Ctx) error {
+	db := database.DB.Db
+
+	var client models.Client
+
+	if err := db.Order("id DESC").First(&client).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Contact not found",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": client,
+	})
+}
+
 func GetAllClients(c *fiber.Ctx) error {
 	db := database.DB.Db
 
