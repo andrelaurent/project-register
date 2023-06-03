@@ -4,7 +4,6 @@ import (
 	"errors"
 	"math"
 	"strconv"
-	"time"
 
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
