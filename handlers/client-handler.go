@@ -147,10 +147,7 @@ func updateClientFields(client *models.Client, updateData map[string]interface{}
 			}
 		case "date":
 			if dateStr, ok := value.(string); ok {
-				date, err := time.Parse(time.RFC3339, dateStr)
-				if err == nil {
-					client.Date = date
-				}
+				client.Date = dateStr
 			}
 		}
 	}

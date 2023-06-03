@@ -47,6 +47,23 @@ func CreateContact(c *fiber.Ctx) error {
 
 }
 
+func GetLatestContact(c *fiber.Ctx) error {
+	db := database.DB.Db
+
+	var contact models.Contact
+
+	if err := db.Order("id DESC").First(&contact).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Contact not found",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": contact,
+	})
+}
+
 func GetAllContacts(c *fiber.Ctx) error {
 	db := database.DB.Db
 
