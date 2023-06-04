@@ -88,7 +88,8 @@ func CreateProspect(c *fiber.Ctx) error {
 	prospect.Client = client
 
 	var projectType models.ProjectType
-	if err := db.First(&projectType, "id = ?", prospect.ProjectTypeID).Error; err != nil {
+	code := "PRP"
+	if err := db.First(&projectType, "project_type_code = ?", code).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"message": "Project type not found",
