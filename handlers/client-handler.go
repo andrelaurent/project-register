@@ -4,7 +4,6 @@ import (
 	"errors"
 	"math"
 	"strconv"
-	"time"
 
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
@@ -32,6 +31,23 @@ func CreateClient(c *fiber.Ctx) error {
 	}
 
 	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "Client has created", "data": client})
+}
+
+func GetLatestClient(c *fiber.Ctx) error {
+	db := database.DB.Db
+
+	var client models.Client
+
+	if err := db.Order("id DESC").First(&client).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Contact not found",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": client,
+	})
 }
 
 func GetAllClients(c *fiber.Ctx) error {
@@ -147,10 +163,7 @@ func updateClientFields(client *models.Client, updateData map[string]interface{}
 			}
 		case "date":
 			if dateStr, ok := value.(string); ok {
-				date, err := time.Parse(time.RFC3339, dateStr)
-				if err == nil {
-					client.Date = date
-				}
+				client.Date = dateStr
 			}
 		}
 	}

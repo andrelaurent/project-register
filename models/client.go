@@ -1,8 +1,6 @@
 package models
 
 import (
-	"time"
-
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
@@ -17,7 +15,7 @@ type Client struct {
 	Website        string         `json:"website"`
 	SocialPresence SocialPresence `json:"client_social_presence" gorm:"embedded"`
 	Subsidiary     Subsidiary     `json:"subsidiary" gorm:"embedded"`
-	Date           time.Time      `json:"date"`
+	Date           string         `json:"date"`
 }
 
 type SocialPresence struct {

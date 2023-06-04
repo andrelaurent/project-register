@@ -26,6 +26,7 @@ func SetupRoutes(app *fiber.App) {
 	v2 := api.Group("/client")
 	v2.Post("/create", handlers.CreateClient)
 	v2.Get("/read", handlers.GetAllClients)
+	v2.Get("/latest", handlers.GetLatestClient)
 	v2.Get("/read/:id", handlers.GetClientByID)
 	v2.Get("/search", handlers.SearchClient)
 	// v2.Put("/:id", handlers.UpdateClient)
@@ -96,6 +97,7 @@ func SetupRoutes(app *fiber.App) {
 
 	v9 := api.Group("/contact")
 	v9.Post("/create", handlers.CreateContact)
+	v9.Get("/latest", handlers.GetLatestContact)
 	v9.Get("/read", handlers.GetAllContacts)
 	v9.Get("/read/:id", handlers.GetContactById)
 	v9.Patch("/update/:id", handlers.UpdateContact)
