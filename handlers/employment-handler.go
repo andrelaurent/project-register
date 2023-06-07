@@ -26,7 +26,20 @@ func CreateEmployment(c *fiber.Ctx) error {
 func GetAllEmployments(c *fiber.Ctx) error {
 	db := database.DB.Db
 	var employments []models.Employment
-	clientContactID := c.Params("clientContactID")
+
+	err := db.Find(&employments).Error
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch employments"})
+	}
+
+	return c.JSON(employments)
+}
+
+
+func GetEmploymentsByID(c *fiber.Ctx) error {
+	db := database.DB.Db
+	var employments []models.Employment
+	clientContactID := c.Params("id") // Update this line
 
 	err := db.Where("client_contact_id = ?", clientContactID).Find(&employments).Error
 	if err != nil {
