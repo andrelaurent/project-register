@@ -39,7 +39,7 @@ func GetAllEmployments(c *fiber.Ctx) error {
 func GetEmploymentsByID(c *fiber.Ctx) error {
 	db := database.DB.Db
 	var employments []models.Employment
-	clientContactID := c.Params("id") // Update this line
+	clientContactID := c.Params("id")
 
 	err := db.Where("client_contact_id = ?", clientContactID).Find(&employments).Error
 	if err != nil {
@@ -48,6 +48,24 @@ func GetEmploymentsByID(c *fiber.Ctx) error {
 
 	return c.JSON(employments)
 }
+
+func GetEmploymentsByContactID(c *fiber.Ctx) error {
+	db := database.DB.Db
+	var employments []models.Employment
+	contactID := c.Params("id")
+
+	err := db.Joins("JOIN client_contacts ON employments.client_contact_id = client_contacts.id").
+		Joins("JOIN contacts ON client_contacts.contact_id = contacts.id").
+		Where("contacts.id = ?", contactID).
+		Find(&employments).Error
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch employments"})
+	}
+
+	return c.JSON(employments)
+}
+
 
 func DeleteEmployment(c *fiber.Ctx) error {
 	db := database.DB.Db
