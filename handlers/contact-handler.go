@@ -81,8 +81,8 @@ func GetAllContacts(c *fiber.Ctx) error {
 	size := len(contacts)
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"status":  "error",
-		"message": "Contacts not found",
+		"status":  "success",
+		"message": "Contacts found",
 		"size":    size,
 		"data":    contacts,
 	})

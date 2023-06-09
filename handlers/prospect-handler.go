@@ -154,7 +154,7 @@ func GetAllProspects(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"status":  "error",
 			"message": "No prospect found",
-			"data":    nil,
+			"data":    prospects,
 		})
 	}
 
@@ -179,7 +179,7 @@ func GetProspect(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
 			"message": "prospect not found",
-			"data":    nil,
+			"data":    "null",
 		})
 	}
 
