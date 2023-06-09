@@ -32,7 +32,6 @@ func CreateLocation(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "Location has been created", "data": location})
 }
 
-
 func GetAllLocations(c *fiber.Ctx) error {
 	db := database.DB.Db
 
@@ -86,6 +85,20 @@ func GetLocationByID(c *fiber.Ctx) error {
 	}
 
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Location retrieved", "data": location})
+}
+
+func GetLocationByContactID(c *fiber.Ctx) error {
+	db := database.DB.Db
+	var locations []models.Locations
+
+	id := c.Params("id")
+
+	err := db.Preload("City").Preload("Province").Find(&locations, "contact_id = ?", id).Error
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Location not found", "data": nil})
+	}
+
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Location retrieved", "data": locations})
 }
 
 func SearchLocation(c *fiber.Ctx) error {
