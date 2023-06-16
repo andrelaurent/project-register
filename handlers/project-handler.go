@@ -216,8 +216,9 @@ func UpdateProject(c *fiber.Ctx) error {
 		})
 	}
 
-	id := input["ID"]
-	result := db.Preload("ProjectType").Preload("Company").Preload("Client").First(&project, "project_id = ?", id)
+	// id := input["ID"]
+	id := c.Params("id")
+	result := db.Preload("ProjectType").Preload("Company").Preload("Client").First(&project, "id = ?", id)
 	if result.Error != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"status":  "error",
@@ -503,7 +504,6 @@ func SearchProjects(c *fiber.Ctx) error {
 		"size":    totalCount,
 		"data":    projects,
 	})
-
 }
 
 func FilterAllProjects(c *fiber.Ctx) error {

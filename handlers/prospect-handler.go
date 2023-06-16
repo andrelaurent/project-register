@@ -207,8 +207,9 @@ func UpdateProspect(c *fiber.Ctx) error {
 		})
 	}
 
-	id := input["prospect_id"]
-	result := db.Preload("ProjectType").Preload("Company").Preload("Client").First(&prospect, "prospect_id = ?", id)
+	// id := input["prospect_id"]
+	id := c.Params("id")
+	result := db.Preload("ProjectType").Preload("Company").Preload("Client").First(&prospect, "id = ?", id)
 	if result.Error != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"status":  "error",
