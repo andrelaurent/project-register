@@ -1,0 +1,35 @@
+name: Build Docker Image,Push to GCR
+ 
+on:
+  create:
+    tags:
+    - '*'
+ 
+jobs:
+  build:
+    env:
+      PROJECT_ID: 'idrapps'
+      GCR_PATH: '/project-registration'
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3   
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: ${{ secrets.GCR_KEY }}
+    
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+    - name: Configure Docker to use Google Cloud Platform
+      run: "gcloud auth configure-docker --quiet"
+       
+    - name: Build the Docker image and deploy to GCR
+      run: |
+        docker build --file dockerfile -t  asia.gcr.io/${{ env.PROJECT_ID }}${{ env.GCR_PATH }}:${{ steps.get_version.outputs.VERSION }} .
+        docker push asia.gcr.io/${{ env.PROJECT_ID }}${{ env.GCR_PATH }}:${{ steps.get_version.outputs.VERSION }}
