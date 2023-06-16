@@ -176,6 +176,29 @@ func GetAllProjects(c *fiber.Ctx) error {
 	})
 }
 
+func GetProjectById(c *fiber.Ctx) error {
+	db := database.DB.Db
+
+	id := c.Params("id")
+
+	var project models.Project
+	if err := db.Preload("Company").Preload("ProjectType").Preload("Client").Preload("Prospect", func(db *gorm.DB) *gorm.DB {
+		return db.Preload("Company").Preload("ProjectType").Preload("Client")
+	}).Find(&project, "id = ?", id).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "project not found",
+			"data":    "null",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+		"message": "project found",
+		"data": project,
+	})
+}
+
 func UpdateProject(c *fiber.Ctx) error {
 	db := database.DB.Db
 

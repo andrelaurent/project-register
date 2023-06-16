@@ -21,12 +21,14 @@ type Locations struct {
 
 type City struct {
 	gorm.Model
-	ID       uint   `json:"ID" gorm:"primaryKey;autoIncrement"`
-	CityName string `json:"city_name"`
+	ID         uint   `json:"ID" gorm:"primaryKey;autoIncrement"`
+	CityName   string `json:"city_name"`
+	ProvinceID *uint  `json:"province_id"`
 }
 
 type Province struct {
 	gorm.Model
 	ID           uint   `json:"ID" gorm:"primaryKey;autoIncrement"`
 	ProvinceName string `json:"province_name"`
+	Cities       []City `json:"cities"`
 }

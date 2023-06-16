@@ -237,3 +237,24 @@ func RecoverCity(c *fiber.Ctx) error {
 		"message": "City recovered",
 	})
 }
+
+func GetCityFitered(c *fiber.Ctx) error {
+	db := database.DB.Db
+	id := c.Params("id")
+
+	var cities []models.City
+
+	if err := db.Find(&cities, "province_id = ?", id).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Failed to get city",
+			"data":    nil,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"data": cities,
+	})
+}

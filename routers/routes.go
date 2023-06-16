@@ -84,6 +84,7 @@ func SetupRoutes(app *fiber.App) {
 	v7.Delete("/:id", handlers.DeleteCity)
 	v7.Delete("/hard/:id", handlers.HardDeleteCity)
 	v7.Post("/recover", handlers.RecoverCity)
+	v7.Get("/filter/:id", handlers.GetCityFitered)
 
 	v8 := api.Group("/province")
 	v8.Post("/create", handlers.CreateProvince)

@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"errors"
 	"math"
 	"strconv"
 
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 func CreateProvince(c *fiber.Ctx) error {
@@ -29,21 +31,23 @@ func CreateProvince(c *fiber.Ctx) error {
 func GetAllProvinces(c *fiber.Ctx) error {
 	db := database.DB.Db
 
-	page, err := strconv.Atoi(c.Query("page", "1"))
-	if err != nil || page < 1 {
-		page = 1
-	}
+	// page, err := strconv.Atoi(c.Query("page", "1"))
+	// if err != nil || page < 1 {
+	// 	page = 1
+	// }
 
-	limit, err := strconv.Atoi(c.Query("limit", "10"))
-	if err != nil || limit < 1 {
-		limit = 10
-	}
+	// limit, err := strconv.Atoi(c.Query("limit", "10"))
+	// if err != nil || limit < 1 {
+	// 	limit = 10
+	// }
 
-	offset := (page - 1) * limit
+	// offset := (page - 1) * limit
 
 	var provinces []models.Province
 
-	db.Order("id ASC").Limit(limit).Offset(offset).Find(&provinces)
+	if err := db.Order("id ASC").Preload("Cities").Find(&provinces).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Provinces not found", "data": nil})
+	}
 
 	if len(provinces) == 0 {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Provinces not found", "data": nil})
@@ -52,15 +56,15 @@ func GetAllProvinces(c *fiber.Ctx) error {
 	var total int64
 	db.Model(&models.Province{}).Count(&total)
 
-	totalPages := int(math.Ceil(float64(total) / float64(limit)))
+	// totalPages := int(math.Ceil(float64(total) / float64(limit)))
 
 	response := fiber.Map{
 		"status":      "success",
 		"message":     "Provinces Found",
 		"data":        provinces,
-		"currentPage": page,
-		"perPage":     limit,
-		"totalPages":  totalPages,
+		// "currentPage": page,
+		// "perPage":     limit,
+		// "totalPages":  totalPages,
 		"totalItems":  total,
 	}
 
@@ -145,10 +149,15 @@ func UpdateProvince(c *fiber.Ctx) error {
 
 	id := c.Params("id")
 
-	db.Find(&Province, "id = ?", id)
-
-	if Province == (models.Province{}) {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Province not found", "data": nil})
+	if err := db.Find(&Province, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"message": "Province not found",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to update province",
+		})
 	}
 
 	var updateProvinceData updateProvince
