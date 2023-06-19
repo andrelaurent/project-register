@@ -49,7 +49,7 @@ func getNextUniqueNumber(db *gorm.DB, projectTypeID uint, year int, companyID ui
 	return maxUniqueNumber + 1, nil
 }
 
-func CreateProspect(c *fiber.Ctx) error {
+func CreateProject(c *fiber.Ctx) error {
 	db := database.DB.Db
 
 	var project models.Project
@@ -110,11 +110,11 @@ func CreateProspect(c *fiber.Ctx) error {
 
 	numString := fmt.Sprintf("%02d", uniqueNumber)
 	projectId := project.ProjectType.ProjectTypeCode + "/" + project.Company.CompanyCode + "/" + project.Client.ClientCode + "/" + numString + "/" + strconv.Itoa(project.Year)
-	projectTitle := fmt.Sprintf("%s: %s", projectId, project.ProspectName)
+	projectTitle := fmt.Sprintf("%s: %s", projectId, project.ProjectName)
 
 	project.UniqueNO = int(uniqueNumber)
-	project.ProspectID = projectId
-	project.ProspectTitle = projectTitle
+	project.ProjectID = projectId
+	project.ProjectTitle = projectTitle
 	project.IsDeleted = false
 
 	if err := db.Create(&project).Error; err != nil {
@@ -126,7 +126,7 @@ func CreateProspect(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(project)
 }
 
-func GetAllProspects(c *fiber.Ctx) error {
+func GetAllProjects(c *fiber.Ctx) error {
 	db := database.DB.Db
 
 	// page, _ := strconv.Atoi(c.Query("page", "1"))
@@ -145,7 +145,7 @@ func GetAllProspects(c *fiber.Ctx) error {
 	if err := db.Preload("Company").Preload("ProjectType").Preload("Client").Find(&projects).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
-			"message": "Could not find prospects",
+			"message": "Could not find projects",
 			"data":    nil,
 		})
 	}
@@ -163,13 +163,13 @@ func GetAllProspects(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
-		"message": "Prospects found",
+		"message": "Projects found",
 		"size":    totalCount,
 		"data":    projects,
 	})
 }
 
-func GetProspect(c *fiber.Ctx) error {
+func GetProject(c *fiber.Ctx) error {
 	db := database.DB.Db
 
 	id := c.Params("id")
@@ -183,6 +183,14 @@ func GetProspect(c *fiber.Ctx) error {
 		})
 	}
 
+	if project.ID == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "project not found",
+			"data":    "null",
+		})
+	}
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
 		"message": "projects found",
@@ -190,7 +198,7 @@ func GetProspect(c *fiber.Ctx) error {
 	})
 }
 
-func UpdateProspect(c *fiber.Ctx) error {
+func UpdateProject(c *fiber.Ctx) error {
 	db := database.DB.Db
 
 	var isPresent bool
@@ -207,7 +215,6 @@ func UpdateProspect(c *fiber.Ctx) error {
 		})
 	}
 
-	// id := input["prospect_id"]
 	id := c.Params("id")
 	result := db.Preload("ProjectType").Preload("Company").Preload("Client").First(&project, "id = ?", id)
 	if result.Error != nil {
@@ -238,8 +245,8 @@ func UpdateProspect(c *fiber.Ctx) error {
 		project.ProjectTypeID = projectType.ID
 		project.ProjectType = projectType
 	}
-	if val, ok := input["prospect_name"]; ok && val.(string) != "" {
-		project.ProspectName = val.(string)
+	if val, ok := input["project_name"]; ok && val.(string) != "" {
+		project.ProjectName = val.(string)
 	}
 	// if val, ok := input["no"]; ok && val.(int) != 0 {
 	// 	prospect.UniqueNO = val.(int)
@@ -258,10 +265,10 @@ func UpdateProspect(c *fiber.Ctx) error {
 		project.Pic = val.(string)
 	}
 	if val, ok := input["status"]; ok && val.(string) != "" {
-		project.ProspectStatus = val.(string)
+		project.ProjectStatus = val.(string)
 	}
 	if val, ok := input["amount"]; ok && val.(float64) != 0 {
-		project.ProspectAmount = val.(float64)
+		project.ProjectAmount = val.(float64)
 	}
 	if val, ok := input["company_id"]; ok && val.(float64) != 0 {
 		isPresent = true
@@ -325,13 +332,13 @@ func UpdateProspect(c *fiber.Ctx) error {
 
 		numString := fmt.Sprintf("%02d", uniqueNumber)
 		projectId := project.ProjectType.ProjectTypeCode + "/" + project.Company.CompanyCode + "/" + project.Client.ClientCode + "/" + numString + "/" + strconv.Itoa(project.Year)
-		projectTitle := fmt.Sprintf("%s: %s", projectId, project.ProspectName)
+		projectTitle := fmt.Sprintf("%s: %s", projectId, project.ProjectName)
 
 		project.UniqueNO = int(uniqueNumber)
-		project.ProspectID = projectId
-		project.ProspectTitle = projectTitle
+		project.ProjectID = projectId
+		project.ProjectTitle = projectTitle
 	} else {
-		project.ProspectTitle = fmt.Sprintf("%s: %s", project.ProspectID, project.ProspectName)
+		project.ProjectTitle = fmt.Sprintf("%s: %s", project.ProjectID, project.ProjectName)
 	}
 
 	if err := db.Save(&project).Error; err != nil {
@@ -349,23 +356,13 @@ func UpdateProspect(c *fiber.Ctx) error {
 	})
 }
 
-func DeleteProspect(c *fiber.Ctx) error {
+func DeleteProject(c *fiber.Ctx) error {
 	db := database.DB.Db
 
-	type DeleteRequest struct {
-		ID string `json:"prospect_id"`
-	}
 	var project models.Project
-	var id DeleteRequest
+	id := c.Params("id")
 
-	if err := c.BodyParser(&id); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "error",
-			"message": "Invalid input",
-			"data":    nil,
-		})
-	}
-	result := db.Find(&project, "prospect_id = ?", id.ID)
+	result := db.Find(&project, "id = ?", id)
 	if result.Error != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"status":  "error",
@@ -388,14 +385,11 @@ func DeleteProspect(c *fiber.Ctx) error {
 	})
 }
 
-func HardDeleteProspect(c *fiber.Ctx) error {
+func HardDeleteProject(c *fiber.Ctx) error {
 	db := database.DB.Db
 
-	type DeleteRequest struct {
-		ID string `json:"prospect_id"`
-	}
 	var project models.Project
-	var id DeleteRequest
+	id := c.Params("id")
 
 	if err := c.BodyParser(&id); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -404,7 +398,7 @@ func HardDeleteProspect(c *fiber.Ctx) error {
 			"data":    nil,
 		})
 	}
-	result := db.Unscoped().Find(&project, "prospect_id = ?", id.ID)
+	result := db.Unscoped().Find(&project, "id = ?", id)
 	if result.Error != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"status":  "error",
@@ -427,127 +421,16 @@ func HardDeleteProspect(c *fiber.Ctx) error {
 	})
 }
 
-// func ConvertToProject(c *fiber.Ctx) error {
-// 	db := database.DB.Db
-
-// 	type RequestId struct {
-// 		ProspectID string `json:"prospect_id"`
-// 		TypeID     uint   `json:"type_id"`
-// 	}
-
-// 	var id RequestId
-// 	if err := c.BodyParser(&id); err != nil {
-// 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-// 			"status":  "error",
-// 			"message": "Invalid input",
-// 			"data":    nil,
-// 		})
-// 	}
-
-// 	var prospect models.Prospect
-// 	if err := db.Preload("ProjectType").Preload("Company").Preload("Client").Where("prospect_id = ?", id.ProspectID).First(&prospect).Error; err != nil {
-// 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-// 			"status":  "error",
-// 			"message": "Prospect not found",
-// 			"data":    nil,
-// 		})
-// 	}
-
-// 	// projectId := prospect.ProspectID
-// 	// projectId = strings.ReplaceAll(projectId, "PROSPECT/", "")
-// 	// projectTitle := prospect.ProspectTitle
-// 	// projectTitle = strings.ReplaceAll(projectTitle, "PROSPECT/", "")
-
-// 	var projectType models.ProjectType
-// 	if err := db.First(&projectType, "id = ?", id.TypeID).Error; err != nil {
-// 		if errors.Is(err, gorm.ErrRecordNotFound) {
-// 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-// 				"status":  "error",
-// 				"message": "Type not found",
-// 				"data":    nil,
-// 			})
-// 		}
-// 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-// 			"status":  "error",
-// 			"message": "Failed to update prospect",
-// 			"data":    nil,
-// 		})
-// 	}
-
-// 	project := models.Project{
-// 		// ProjectID:     projectId,
-// 		ProjectTypeID: id.TypeID,
-// 		ProjectType:   projectType,
-// 		ProjectName:   prospect.ProspectName,
-// 		// UniqueNO:      prospect.UniqueNO,
-// 		Year:          prospect.Year,
-// 		Pic:           prospect.Pic,
-// 		ProjectStatus: prospect.ProspectStatus,
-// 		// ProjectTitle:  projectTitle,
-// 		ProjectAmount: prospect.ProspectAmount,
-// 		CompanyID:     prospect.CompanyID,
-// 		Company:       prospect.Company,
-// 		ClientID:      prospect.ClientID,
-// 		Client:        prospect.Client,
-// 		ProspectID:    prospect.ProspectID,
-// 		Prospect:      prospect,
-// 		// IsDeleted:     false,
-// 		Jira:     prospect.Jira,
-// 		Clockify: prospect.Clockify,
-// 		Pcs:      prospect.Pcs,
-// 		Pms:      prospect.Pms,
-// 	}
-
-// 	uniqueNumber, err := getProjectUniqueNumber(db, project.ProjectTypeID, project.Year, project.CompanyID, project.ClientID)
-// 	if err != nil {
-// 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-// 			"message": "Failed to create project",
-// 		})
-// 	}
-
-// 	numString := fmt.Sprintf("%02d", uniqueNumber)
-// 	projectId := project.ProjectType.ProjectTypeCode + "/" + project.Company.CompanyCode + "/" + project.Client.ClientCode + "/" + numString + "/" + strconv.Itoa(project.Year)
-// 	projectTitle := fmt.Sprintf("%s: %s", projectId, project.ProjectName)
-
-// 	project.UniqueNO = int(uniqueNumber)
-// 	project.ProjectID = projectId
-// 	project.ProjectTitle = projectTitle
-// 	project.IsDeleted = false
-
-// 	if err := db.First(&project, "project_id = ?", projectId).Error; err == nil {
-// 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-// 			"message": "Project already existed",
-// 		})
-// 	} else if errors.Is(err, gorm.ErrRecordNotFound) {
-// 		if err := db.Create(&project).Error; err != nil {
-// 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-// 				"status":  "error",
-// 				"message": "Failed to convert prospect",
-// 				"data":    nil,
-// 			})
-// 		}
-// 	} else {
-// 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-// 			"status":  "error",
-// 			"message": "Failed to convert prospect",
-// 			"data":    nil,
-// 		})
-// 	}
-
-// 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-// 		"status":  "success",
-// 		"message": "Prospect converted",
-// 		"data":    project,
-// 	})
-// }
-
-func RecoverProspect(c *fiber.Ctx) error {
+func ConvertToProject(c *fiber.Ctx) error {
 	db := database.DB.Db
 
-	var request struct {
-		ProspectID string `json:"prospect_id"`
+	type RequestId struct {
+		TypeID uint `json:"type_id"`
 	}
 
+	var request RequestId
+
+	id := c.Params("id")
 	if err := c.BodyParser(&request); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
@@ -557,7 +440,70 @@ func RecoverProspect(c *fiber.Ctx) error {
 	}
 
 	var project models.Project
-	if err := db.Unscoped().Where("prospect_id = ? AND is_deleted = true", request.ProspectID).First(&project).Error; err != nil {
+	if err := db.Preload("ProjectType").Preload("Company").Preload("Client").Where("id = ?", id).First(&project).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "project not found",
+			"data":    nil,
+		})
+	}
+
+	var projectType models.ProjectType
+	if err := db.First(&projectType, "id = ?", request.TypeID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"status":  "error",
+				"message": "Type not found",
+				"data":    nil,
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Failed to update project",
+			"data":    nil,
+		})
+	}
+	project.ProjectTypeID = projectType.ID
+	project.ProjectType = projectType
+
+	uniqueNumber, err := getNextUniqueNumber(db, project.ProjectTypeID, project.Year, project.CompanyID, project.ClientID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to create project",
+		})
+	}
+
+	numString := fmt.Sprintf("%02d", uniqueNumber)
+	projectId := project.ProjectType.ProjectTypeCode + "/" + project.Company.CompanyCode + "/" + project.Client.ClientCode + "/" + numString + "/" + strconv.Itoa(project.Year)
+	projectTitle := fmt.Sprintf("%s: %s", projectId, project.ProjectName)
+
+	project.UniqueNO = int(uniqueNumber)
+	project.ProjectID = projectId
+	project.ProjectTitle = projectTitle
+	project.IsDeleted = false
+
+	if err := db.Save(&project).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Failed to convert project",
+			"data":    nil,
+		})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Project converted",
+		"data":    project,
+	})
+}
+
+func RecoverProject(c *fiber.Ctx) error {
+	db := database.DB.Db
+
+	id := c.Params("id")
+
+	var project models.Project
+	if err := db.Unscoped().Where("id = ? AND is_deleted = true", id).First(&project).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"status":  "error",
 			"message": "project not found",
@@ -579,7 +525,7 @@ func RecoverProspect(c *fiber.Ctx) error {
 	})
 }
 
-func SearchProspects(c *fiber.Ctx) error {
+func SearchProjects(c *fiber.Ctx) error {
 	db := database.DB.Db
 	searchQuery := c.Query("q")
 	page, _ := strconv.Atoi(c.Query("page", "1"))
@@ -588,7 +534,7 @@ func SearchProspects(c *fiber.Ctx) error {
 	var project []models.Project
 
 	if searchQuery != "" {
-		db.Preload("ProjectType").Preload("Company").Preload("Client").Where("LOWER(prospect_name) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(searchQuery))).Offset((page - 1) * limit).Limit(limit).Find(&project)
+		db.Preload("ProjectType").Preload("Company").Preload("Client").Where("LOWER(project_name) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(searchQuery))).Offset((page - 1) * limit).Limit(limit).Find(&project)
 	} else {
 		db.Preload("ProjectType").Preload("Company").Preload("Client").Offset((page - 1) * limit).Limit(limit).Find(&project)
 	}
@@ -612,7 +558,7 @@ func SearchProspects(c *fiber.Ctx) error {
 
 }
 
-func FilterAllProspects(c *fiber.Ctx) error {
+func FilterAllProjects(c *fiber.Ctx) error {
 	db := database.DB.Db
 
 	page, _ := strconv.Atoi(c.Query("page", "1"))
@@ -663,7 +609,7 @@ func FilterAllProspects(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
-		"message": "Prospects found",
+		"message": "Projects found",
 		"size":    totalCount,
 		"data":    projects,
 	})
