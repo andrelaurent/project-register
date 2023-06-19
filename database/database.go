@@ -48,7 +48,6 @@ func Connect() {
 		&models.User{},
 		&models.City{},
 		&models.Province{},
-		&models.Prospect{},
 		&models.Project{},
 		&models.Contact{},
 		&models.Client{},

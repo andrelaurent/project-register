@@ -4,7 +4,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type Prospect struct {
+type Project struct {
 	gorm.Model
 	ID             uint        `json:"ID" gorm:"primaryKey;autoIncrement"`
 	ProspectID     string      `json:"prospect_id" gorm:"not null"`
@@ -26,8 +26,4 @@ type Prospect struct {
 	Clockify       bool        `json:"clockify" gorm:"not null"`
 	Pcs            bool        `json:"pcs" gorm:"not null"`
 	Pms            bool        `json:"pms" gorm:"not null"`
-}
-
-type Prospects struct {
-	Prospects []Prospect `json:"Prospects"`
 }
