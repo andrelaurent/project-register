@@ -109,11 +109,11 @@ func CreateProspect(c *fiber.Ctx) error {
 	}
 
 	numString := fmt.Sprintf("%02d", uniqueNumber)
-	projecttId := project.ProjectType.ProjectTypeCode + "/" + project.Company.CompanyCode + "/" + project.Client.ClientCode + "/" + numString + "/" + strconv.Itoa(project.Year)
-	projectTitle := fmt.Sprintf("%s: %s", &projecttId, project.ProspectName)
+	projectId := project.ProjectType.ProjectTypeCode + "/" + project.Company.CompanyCode + "/" + project.Client.ClientCode + "/" + numString + "/" + strconv.Itoa(project.Year)
+	projectTitle := fmt.Sprintf("%s: %s", projectId, project.ProspectName)
 
 	project.UniqueNO = int(uniqueNumber)
-	project.ProspectID = projecttId
+	project.ProspectID = projectId
 	project.ProspectTitle = projectTitle
 	project.IsDeleted = false
 
