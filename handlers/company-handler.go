@@ -3,15 +3,34 @@ package handlers
 import (
 	"math"
 	"strconv"
+	"time"
 
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/gofiber/fiber/v2"
 )
 
+func CreateCompanyAuditEntry(action string, company models.Company) error {
+	db := database.DB.Db
+
+	audit := models.CompanyAudit{
+		CompanyID:   company.ID,
+		CompanyCode: company.CompanyCode,
+		CompanyName: company.CompanyName,
+		Action:      action,
+		Date:        time.Now().Format("2006-01-02 15:04:05"),
+	}
+
+	if err := db.Create(&audit).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CreateCompany(c *fiber.Ctx) error {
 	db := database.DB.Db
-	company := new(models.Company)
+	var company models.Company
 
 	err := c.BodyParser(company)
 	if err != nil {
@@ -33,6 +52,12 @@ func CreateCompany(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status": "error", "message": "Could not create company", "data": err,
+		})
+	}
+
+	if err := CreateCompanyAuditEntry("create", company); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to create company",
 		})
 	}
 
@@ -177,6 +202,13 @@ func UpdateCompany(c *fiber.Ctx) error {
 
 	db.Save(&company)
 
+	if err := CreateCompanyAuditEntry("update", company); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to update company",
+		})
+	}
+
+
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "companys Found", "data": company})
 }
 
@@ -189,6 +221,13 @@ func DeleteCompany(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not delete company", "data": result.Error})
 	}
+
+	if err := CreateCompanyAuditEntry("soft delete", company); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to delete company",
+		})
+	}
+
 
 	if result.RowsAffected == 0 {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Company not found", "data": nil})
@@ -207,6 +246,13 @@ func HardDeleteCompany(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not delete company", "data": result.Error})
 	}
+
+	if err := CreateCompanyAuditEntry("hard delete", company); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to delete company",
+		})
+	}
+
 
 	if result.RowsAffected == 0 {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Company not found", "data": nil})
@@ -246,6 +292,13 @@ func RecoverCompany(c *fiber.Ctx) error {
 			"data":    nil,
 		})
 	}
+
+	if err := CreateCompanyAuditEntry("recover", company); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to recover company",
+		})
+	}
+
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",

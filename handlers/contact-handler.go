@@ -11,6 +11,23 @@ import (
 	"gorm.io/gorm"
 )
 
+func CreateContactAuditEntry(action string, contact models.Contact) error {
+	db := database.DB.Db
+
+	audit := models.ContactAudit{
+		ContactID:   contact.ID,
+		ContactName: contact.ContactName,
+		Action:      action,
+		Date:        time.Now().Format("2006-01-02 15:04:05"),
+	}
+
+	if err := db.Create(&audit).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CreateContact(c *fiber.Ctx) error {
 	db := database.DB.Db
 
@@ -36,6 +53,12 @@ func CreateContact(c *fiber.Ctx) error {
 			"status":  "error",
 			"message": "Could not create contact",
 			"data":    err.Error(),
+		})
+	}
+
+	if err := CreateContactAuditEntry("create", contact); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to create contact",
 		})
 	}
 
@@ -148,6 +171,12 @@ func UpdateContact(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to update contact",
 			"error":   err.Error(),
+		})
+	}
+
+	if err := CreateContactAuditEntry("update", contact); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to update contact",
 		})
 	}
 
@@ -282,6 +311,12 @@ func SoftDeleteContact(c *fiber.Ctx) error {
 		})
 	}
 
+	if err := CreateContactAuditEntry("soft delete", contact); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to delete contact",
+		})
+	}
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Contact deleted",
@@ -309,6 +344,12 @@ func HardDeleteContact(c *fiber.Ctx) error {
 			"status":  "error",
 			"message": "Failed to delete associated locations",
 			"data":    err.Error(),
+		})
+	}
+
+	if err := CreateContactAuditEntry("hard delete", contact); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to delete contact",
 		})
 	}
 

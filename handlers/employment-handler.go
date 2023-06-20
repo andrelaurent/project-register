@@ -1,14 +1,33 @@
 package handlers
 
 import (
+	"time"
+
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/gofiber/fiber/v2"
 )
 
+func CreateEmploymentAuditEntry(action string, employment models.Employment) error {
+	db := database.DB.Db
+
+	audit := models.EmploymentAudit{
+		EmploymentID:    employment.ID,
+		ClientContactID: employment.ClientContactID,
+		Action:          action,
+		Date:            time.Now().Format("2006-01-02 15:04:05"),
+	}
+
+	if err := db.Create(&audit).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CreateEmployment(c *fiber.Ctx) error {
 	db := database.DB.Db
-	employment := new(models.Employment)
+	var employment models.Employment
 
 	err := c.BodyParser(employment)
 	if err != nil {
@@ -18,6 +37,12 @@ func CreateEmployment(c *fiber.Ctx) error {
 	err = db.Create(&employment).Error
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not create employment", "data": err})
+	}
+
+	if err := CreateEmploymentAuditEntry("create", employment); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to create employment",
+		})
 	}
 
 	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "Employment has created", "data": employment})
@@ -34,7 +59,6 @@ func GetAllEmployments(c *fiber.Ctx) error {
 
 	return c.JSON(employments)
 }
-
 
 func GetEmploymentsByID(c *fiber.Ctx) error {
 	db := database.DB.Db
@@ -66,7 +90,6 @@ func GetEmploymentsByContactID(c *fiber.Ctx) error {
 	return c.JSON(employments)
 }
 
-
 func DeleteEmployment(c *fiber.Ctx) error {
 	db := database.DB.Db
 	employmentID := c.Params("employmentID")
@@ -74,6 +97,12 @@ func DeleteEmployment(c *fiber.Ctx) error {
 	var employment models.Employment
 	if err := db.First(&employment, employmentID).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Employment not found"})
+	}
+
+	if err := CreateEmploymentAuditEntry("soft create", employment); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to delete project",
+		})
 	}
 
 	if err := db.Delete(&employment).Error; err != nil {

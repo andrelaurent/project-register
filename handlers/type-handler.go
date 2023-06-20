@@ -3,11 +3,30 @@ package handlers
 import (
 	"math"
 	"strconv"
+	"time"
 
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/gofiber/fiber/v2"
 )
+
+func CreateProjectTypeAuditEntry(action string, projectType models.ProjectType) error {
+	db := database.DB.Db
+
+	audit := models.ProjectTypeAudit{
+		ProjectTypeID:   projectType.ID,
+		ProjectTypeCode: projectType.ProjectTypeCode,
+		ProjectTypeName: projectType.ProjectTypeName,
+		Action:     action,
+		Date:       time.Now().Format("2006-01-02 15:04:05"),
+	}
+
+	if err := db.Create(&audit).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func GetAllProjectTypes(c *fiber.Ctx) error {
 	db := database.DB.Db
@@ -118,7 +137,7 @@ func SearchProjectType(c *fiber.Ctx) error {
 
 func CreateType(c *fiber.Ctx) error {
 	db := database.DB.Db
-	projectType := new(models.ProjectType)
+	var projectType models.ProjectType
 
 	err := c.BodyParser(projectType)
 	if err != nil {
@@ -137,6 +156,12 @@ func CreateType(c *fiber.Ctx) error {
 	err = db.Create(&projectType).Error
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not create project type", "data": err})
+	}
+
+	if err := CreateProjectTypeAuditEntry("create", projectType); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to create project type",
+		})
 	}
 
 	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "project type has created", "data": projectType})
@@ -171,6 +196,12 @@ func UpdateProjectType(c *fiber.Ctx) error {
 
 	db.Save(&projectType)
 
+	if err := CreateProjectTypeAuditEntry("update", projectType); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to create update type",
+		})
+	}
+
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "project type Found", "data": projectType})
 }
 
@@ -183,6 +214,12 @@ func DeleteProjectType(c *fiber.Ctx) error {
 
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not delete project type", "data": result.Error})
+	}
+
+	if err := CreateProjectTypeAuditEntry("soft delete", projectType); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to delete project type",
+		})
 	}
 
 	if result.RowsAffected == 0 {
@@ -201,6 +238,12 @@ func HardDeleteProjectType(c *fiber.Ctx) error {
 
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not delete project type", "data": result.Error})
+	}
+
+	if err := CreateProjectTypeAuditEntry("hard delete", projectType); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to delete project type",
+		})
 	}
 
 	if result.RowsAffected == 0 {
@@ -239,6 +282,12 @@ func RecoverProjectType(c *fiber.Ctx) error {
 			"status":  "error",
 			"message": "Failed to recover project type",
 			"data":    nil,
+		})
+	}
+	
+	if err := CreateProjectTypeAuditEntry("recover", projectType); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to recover project type",
 		})
 	}
 

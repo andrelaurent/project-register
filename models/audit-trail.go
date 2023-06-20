@@ -30,7 +30,6 @@ type CompanyAudit struct {
 	CompanyName string `json:"name"`
 	Action      string `json:"action"`
 	Date        string `json:"date"`
-	
 }
 
 type ProjectTypeAudit struct {
@@ -50,15 +49,14 @@ type ContactAudit struct {
 	ContactName string `json:"name"`
 	Action      string `json:"action"`
 	Date        string `json:"date"`
-	
 }
 
 type ClientContactAudit struct {
 	gorm.Model
 	ID              uint   `json:"ID" gorm:"primaryKey;autoIncrement"`
 	ClientContactID uint   `json:"client_contact_id"`
-	ClientID        string `json:"client_id"`
-	ContactID       string `json:"contact_id"`
+	ClientID        uint   `json:"client_id"`
+	ContactID       uint   `json:"contact_id"`
 	Action          string `json:"action"`
 	Date            string `json:"date"`
 }

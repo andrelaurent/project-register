@@ -16,11 +16,11 @@ func CreateClientAuditEntry(action string, client models.Client) error {
 	db := database.DB.Db
 
 	audit := models.ClientAudit{
-		ClientID:    client.ID,
-		ClientCode:  client.ClientCode,
+		ClientID:   client.ID,
+		ClientCode: client.ClientCode,
 		ClientName: client.ClientName,
-		Action:      action,
-		Date:        time.Now().Format("2006-01-02 15:04:05"),
+		Action:     action,
+		Date:       time.Now().Format("2006-01-02 15:04:05"),
 	}
 
 	if err := db.Create(&audit).Error; err != nil {
@@ -32,7 +32,7 @@ func CreateClientAuditEntry(action string, client models.Client) error {
 
 func CreateClient(c *fiber.Ctx) error {
 	db := database.DB.Db
-	client := new(models.Client)
+	var client models.Client
 
 	err := c.BodyParser(client)
 	if err != nil {
@@ -47,6 +47,12 @@ func CreateClient(c *fiber.Ctx) error {
 	err = db.Create(&client).Error
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not create client", "data": err})
+	}
+
+	if err := CreateClientAuditEntry("create", client); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to create client",
+		})
 	}
 
 	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "Client has created", "data": client})
@@ -143,6 +149,12 @@ func UpdateClient(c *fiber.Ctx) error {
 			"status":  "error",
 			"message": "Failed to save updated client",
 			"data":    err.Error(),
+		})
+	}
+
+	if err := CreateClientAuditEntry("update", client); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to update client",
 		})
 	}
 
@@ -342,6 +354,12 @@ func DeleteClient(c *fiber.Ctx) error {
 		})
 	}
 
+	if err := CreateClientAuditEntry("soft delete", client); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to delete client",
+		})
+	}
+
 	if result.RowsAffected == 0 {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Client not found", "data": nil})
 	}
@@ -365,6 +383,12 @@ func HardDeleteClient(c *fiber.Ctx) error {
 			"status":  "error",
 			"message": "Failed to delete associated locations",
 			"data":    err.Error(),
+		})
+	}
+
+	if err := CreateClientAuditEntry("hard delete", client); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to delete client",
 		})
 	}
 

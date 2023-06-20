@@ -3,15 +3,34 @@ package handlers
 import (
 	"math"
 	"strconv"
+	"time"
 
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/gofiber/fiber/v2"
 )
 
+func CreateClientContactAuditEntry(action string, clientContact models.ClientContact) error {
+	db := database.DB.Db
+
+	audit := models.ClientContactAudit{
+		ClientContactID:   clientContact.ID,
+		ClientID:   clientContact.ClientID,
+		ContactID: clientContact.ContactID,
+		Action:      action,
+		Date:        time.Now().Format("2006-01-02 15:04:05"),
+	}
+
+	if err := db.Create(&audit).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CreateClientContact(c *fiber.Ctx) error {
 	db := database.DB.Db
-	clientContact := new(models.ClientContact)
+	var clientContact models.ClientContact
 
 	err := c.BodyParser(clientContact)
 	if err != nil {
@@ -37,6 +56,12 @@ func CreateClientContact(c *fiber.Ctx) error {
 	err = db.Create(&clientContact).Error
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not create client contact", "data": err})
+	}
+
+	if err := CreateClientContactAuditEntry("create", clientContact); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to create client_contact",
+		})
 	}
 
 	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "Client contact has been created", "data": clientContact})
@@ -191,6 +216,12 @@ func DeleteClientContact(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not delete Client contact", "data": result.Error})
 	}
 
+	if err := CreateClientContactAuditEntry("soft delete", ClientContact); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to delete client_contact",
+		})
+	}
+
 	if result.RowsAffected == 0 {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Client contact not found", "data": nil})
 	}
@@ -206,6 +237,12 @@ func HardDeleteClientContact(c *fiber.Ctx) error {
 	result := db.Unscoped().Where("id = ?", id).Delete(&ClientContact)
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not delete client contact", "data": result.Error})
+	}
+
+	if err := CreateClientContactAuditEntry("hard delete", ClientContact); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to delete client_contact",
+		})
 	}
 
 	if result.RowsAffected == 0 {
