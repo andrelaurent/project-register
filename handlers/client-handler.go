@@ -4,12 +4,31 @@ import (
 	"errors"
 	"math"
 	"strconv"
+	"time"
 
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
+
+func CreateClientAuditEntry(action string, client models.Client) error {
+	db := database.DB.Db
+
+	audit := models.ClientAudit{
+		ClientID:    client.ID,
+		ClientCode:  client.ClientCode,
+		ClientName: client.ClientName,
+		Action:      action,
+		Date:        time.Now().Format("2006-01-02 15:04:05"),
+	}
+
+	if err := db.Create(&audit).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func CreateClient(c *fiber.Ctx) error {
 	db := database.DB.Db

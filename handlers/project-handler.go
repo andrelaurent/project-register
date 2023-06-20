@@ -16,7 +16,7 @@ import (
 func CreateProjectAuditEntry(action string, project models.Project) error {
 	db := database.DB.Db
 
-	audit := models.ProjectAudit {
+	audit := models.ProjectAudit{
 		ProjectID:   project.ID,
 		ProjectCode: project.ProjectID,
 		ProjectName: project.ProjectName,
