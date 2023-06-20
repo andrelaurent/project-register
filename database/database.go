@@ -54,6 +54,14 @@ func Connect() {
 		&models.Locations{},
 		&models.ClientContact{},
 		&models.Employment{},
+		&models.ProjectAudit{},
+		&models.ClientAudit{},
+		&models.CompanyAudit{},
+		&models.ProjectTypeAudit{},
+		&models.ClientContactAudit{},
+		&models.EmploymentAudit{},
+		&models.UserAudit{},
+		&models.LocationAudit{},
 	)
 
 	DB = Dbinstance{
