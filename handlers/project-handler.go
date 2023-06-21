@@ -150,6 +150,17 @@ func CreateProject(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(project)
 }
 
+func GetProspectTypeID() (uint, error) {
+	db := database.DB.Db
+
+	var projectType models.ProjectType
+	if err := db.First(&projectType, "project_type_code = ?", "PRP").Error; err != nil {
+		return 0, err
+	}
+
+	return projectType.ID, nil
+}
+
 func GetAllProjects(c *fiber.Ctx) error {
 	db := database.DB.Db
 
@@ -165,13 +176,35 @@ func GetAllProjects(c *fiber.Ctx) error {
 	// 	})
 	// }
 
+	model := c.Params("model")
 	var projects []models.Project
-	if err := db.Preload("Company").Preload("ProjectType").Preload("Client").Find(&projects).Error; err != nil {
+	prospectTypeId, err := GetProspectTypeID()
+	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
 			"message": "Could not find projects",
 			"data":    nil,
 		})
+	}
+
+	if model == "prospect" {
+		if err := db.Preload("Company").Preload("ProjectType").Preload("Client").Where("project_type_id = ?", prospectTypeId).Find(&projects).Error; err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"status":  "error",
+				"message": "Could not find projects",
+				"data":    nil,
+			})
+		}
+	} else if model == "project" {
+		if err := db.Preload("Company").
+			Preload("ProjectType").
+			Preload("Client").Not("project_type_id = ?", prospectTypeId).Find(&projects).Error; err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"status":  "error",
+				"message": "Could not find projects",
+				"data":    nil,
+			})
+		}
 	}
 
 	if len(projects) == 0 {
@@ -182,8 +215,7 @@ func GetAllProjects(c *fiber.Ctx) error {
 		})
 	}
 
-	var totalCount int64
-	db.Model(&projects).Count(&totalCount)
+	totalCount := len(projects)
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
@@ -197,14 +229,34 @@ func GetProject(c *fiber.Ctx) error {
 	db := database.DB.Db
 
 	id := c.Params("id")
-
+	model := c.Params("model")
 	var project models.Project
-	if err := db.Preload("Company").Preload("ProjectType").Preload("Client").Find(&project, "id = ?", id).Error; err != nil {
+
+	prospectTypeId, err := GetProspectTypeID()
+	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
-			"message": "project not found",
-			"data":    "null",
+			"message": "Could not find projects",
+			"data":    nil,
 		})
+	}
+
+	if model == "prospect" {
+		if err := db.Preload("Company").Preload("ProjectType").Preload("Client").Where("project_type_id = ?", prospectTypeId).Find(&project, "id = ?", id).Error; err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"status":  "error",
+				"message": "project not found",
+				"data":    "null",
+			})
+		}
+	} else if model == "project" {
+		if err := db.Preload("Company").Preload("ProjectType").Preload("Client").Not("project_type_id = ?", prospectTypeId).Find(&project, "id = ?", id).Error; err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"status":  "error",
+				"message": "project not found",
+				"data":    "null",
+			})
+		}
 	}
 
 	if project.ID == 0 {
@@ -240,14 +292,37 @@ func UpdateProject(c *fiber.Ctx) error {
 	}
 
 	id := c.Params("id")
-	result := db.Preload("ProjectType").Preload("Company").Preload("Client").First(&project, "id = ?", id)
-	if result.Error != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+	model := c.Params("model")
+	prospectTypeId, err := GetProspectTypeID()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
-			"message": "project not found",
+			"message": "Could not find projects",
 			"data":    nil,
 		})
 	}
+
+	if model == "prospect" {
+		result := db.Preload("ProjectType").Preload("Company").Preload("Client").Where("project_type_id", prospectTypeId).First(&project, "id = ?", id)
+		if result.Error != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"status":  "error",
+				"message": "project not found",
+				"data":    nil,
+			})
+		}
+	} else if model == "project" {
+		result := db.Preload("ProjectType").Preload("Company").Preload("Client").Not("project_type_id", prospectTypeId).First(&project, "id = ?", id)
+		if result.Error != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"status":  "error",
+				"message": "project not found",
+				"data":    nil,
+			})
+		}
+	}
+	
+
 
 	if val, ok := input["type_id"]; ok && val.(float64) != 0 {
 		isPresent = true
@@ -391,14 +466,33 @@ func DeleteProject(c *fiber.Ctx) error {
 
 	var project models.Project
 	id := c.Params("id")
-
-	result := db.Find(&project, "id = ?", id)
-	if result.Error != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+	model := c.Params("model")
+	prospectTypeId, err := GetProspectTypeID()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
-			"message": "project not found",
+			"message": "Could not find projects",
 			"data":    nil,
 		})
+	}
+	if model == "prospect"{
+		result := db.Where("project_type_id", prospectTypeId).Find(&project, "id = ?", id)
+		if result.Error != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"status":  "error",
+				"message": "project not found",
+				"data":    nil,
+			})
+		}
+	} else if model == "project" {
+		result := db.Not("project_type_id", prospectTypeId).Find(&project, "id = ?", id)
+		if result.Error != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"status":  "error",
+				"message": "project not found",
+				"data":    nil,
+			})
+		}
 	}
 
 	if err := CreateProjectAuditEntry("soft delete", project); err != nil {
@@ -426,14 +520,34 @@ func HardDeleteProject(c *fiber.Ctx) error {
 
 	var project models.Project
 	id := c.Params("id")
-
-	result := db.Unscoped().Find(&project, "id = ?", id)
-	if result.Error != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+	model := c.Params("model")
+	prospectTypeId, err := GetProspectTypeID()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
-			"message": "project not found",
+			"message": "Could not find projects",
 			"data":    nil,
 		})
+	}
+
+	if model == "prospect" {
+		result := db.Unscoped().Where("project_type_id", prospectTypeId).Find(&project, "id = ?", id)
+		if result.Error != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"status":  "error",
+				"message": "project not found",
+				"data":    nil,
+			})
+		}
+	} else if model == "project" {
+		result := db.Unscoped().Not("project_type_id", prospectTypeId).Find(&project, "id = ?", id)
+		if result.Error != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"status":  "error",
+				"message": "project not found",
+				"data":    nil,
+			})
+		}
 	}
 
 	if err := CreateProjectAuditEntry("hard delete", project); err != nil {
@@ -541,15 +655,35 @@ func ConvertToProject(c *fiber.Ctx) error {
 func RecoverProject(c *fiber.Ctx) error {
 	db := database.DB.Db
 
-	id := c.Params("id")
-
 	var project models.Project
-	if err := db.Unscoped().Where("id = ? AND is_deleted = true", id).First(&project).Error; err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+
+	id := c.Params("id")
+	model := c.Params("model")
+	prospectTypeId, err := GetProspectTypeID()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
-			"message": "project not found",
+			"message": "Could not find projects",
 			"data":    nil,
 		})
+	}
+
+	if model == "prospect" {	
+		if err := db.Unscoped().Where("id = ? AND is_deleted = true AND project_type_id = ?", id, prospectTypeId).First(&project).Error; err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"status":  "error",
+				"message": "project not found",
+				"data":    nil,
+			})
+		}
+	} else if model == "project" {
+		if err := db.Unscoped().Where("id = ? AND is_deleted = true", id).Not("project_type_id = ?", prospectTypeId).First(&project).Error; err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"status":  "error",
+				"message": "project not found",
+				"data":    nil,
+			})
+		}
 	}
 
 	if err := db.Unscoped().Model(&project).Updates(map[string]interface{}{"deleted_at": nil, "is_deleted": false}).Error; err != nil {
