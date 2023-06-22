@@ -32,19 +32,19 @@ func CreateClientContact(c *fiber.Ctx) error {
 	db := database.DB.Db
 	var clientContact models.ClientContact
 
-	err := c.BodyParser(clientContact)
+	err := c.BodyParser(&clientContact)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your inputsssss", "data": err.Error()})
 	}
 
 	client := new(models.Client)
-	err = db.First(client, clientContact.ClientID).Error
+	err = db.First(&client, clientContact.ClientID).Error
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not retrieve client info", "data": err})
 	}
 
 	contact := new(models.Contact)
-	err = db.First(contact, clientContact.ContactID).Error
+	err = db.First(&contact, clientContact.ContactID).Error
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not retrieve contact info", "data": err})
 	}
