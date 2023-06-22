@@ -58,6 +58,7 @@ func Connect() {
 		&models.ClientAudit{},
 		&models.CompanyAudit{},
 		&models.ProjectTypeAudit{},
+		&models.ContactAudit{},
 		&models.ClientContactAudit{},
 		&models.EmploymentAudit{},
 		&models.UserAudit{},
