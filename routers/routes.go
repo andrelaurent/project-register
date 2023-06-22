@@ -54,7 +54,7 @@ func SetupRoutes(app *fiber.App) {
 	// v4.Post("/recover", handlers.RecoverProject)
 	// v4.Get("/search", handlers.SearchProjects)
 
-	v5 := api.Group("")
+	v5 := api.Group("/model")
 	v5.Post("/prospect/create", handlers.CreateProject)
 	v5.Get("/:model/read", handlers.GetAllProjects)
 	v5.Get("/:model/read/:id", handlers.GetProject)
