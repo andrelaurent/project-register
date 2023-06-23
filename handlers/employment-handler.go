@@ -29,7 +29,7 @@ func CreateEmployment(c *fiber.Ctx) error {
 	db := database.DB.Db
 	var employment models.Employment
 
-	err := c.BodyParser(employment)
+	err := c.BodyParser(&employment)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
 	}
