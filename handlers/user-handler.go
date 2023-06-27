@@ -4,6 +4,7 @@ import (
 	"crypto/sha512"
 	"crypto/subtle"
 	"encoding/base64"
+	"time"
 
 	"math"
 	"strconv"
@@ -11,8 +12,11 @@ import (
 	"github.com/andrelaurent/project-register/database"
 	"github.com/andrelaurent/project-register/models"
 	"github.com/asaskevich/govalidator"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
 )
+
+const SecretKey = "secretkeyforbackendprojectregistrationtest"
 
 func UserLogin(c *fiber.Ctx) error {
 	db := database.DB.Db
@@ -36,9 +40,33 @@ func UserLogin(c *fiber.Ctx) error {
 		})
 	}
 
+	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Issuer:    strconv.Itoa(int(user.ID)),
+		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
+	})
+
+	token, errToken := claims.SignedString([]byte(SecretKey))
+
+	if errToken != nil {
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(fiber.Map{
+			"message": "could not login",
+		})
+	}
+
+	cookie := fiber.Cookie{
+		Name:     "project-registration-backend",
+		Value:    token,
+		Expires:  time.Now().Add(time.Hour * 24),
+		HTTPOnly: true,
+	}
+
+	c.Cookie(&cookie)
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
 		"data":   result.ID,
+		"token": token,
 	})
 }
 

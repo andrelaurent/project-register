@@ -34,7 +34,7 @@ func CreateClient(c *fiber.Ctx) error {
 	db := database.DB.Db
 	var client models.Client
 
-	err := c.BodyParser(client)
+	err := c.BodyParser(&client)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
 	}
@@ -236,7 +236,7 @@ func updateSocialPresenceFields(socialPresence *models.SocialPresence, data map[
 func updateSubsidiaryFields(subsidiary *models.Subsidiary, data map[string]interface{}) {
 	for key, value := range data {
 		switch key {
-		case "subsidiary":
+		case "subsidiaries":
 			if subs, ok := value.([]interface{}); ok {
 				subsidiary.Subsidiaries = make([]string, len(subs))
 				for i, subs := range subs {
