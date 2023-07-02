@@ -30,7 +30,7 @@ import (
 )
 
 // Version of current fiber package
-const Version = "2.43.0"
+const Version = "2.47.0"
 
 // Handler defines a function to serve HTTP requests.
 type Handler = func(*Ctx) error
@@ -609,18 +609,23 @@ func (app *App) SetTLSHandler(tlsHandler *TLSHandler) {
 // Name Assign name to specific route.
 func (app *App) Name(name string) Router {
 	app.mutex.Lock()
+	defer app.mutex.Unlock()
 
-	latestGroup := app.latestRoute.group
-	if latestGroup != nil {
-		app.latestRoute.Name = latestGroup.name + name
-	} else {
-		app.latestRoute.Name = name
+	for _, routes := range app.stack {
+		for _, route := range routes {
+			if route.Path == app.latestRoute.path {
+				route.Name = name
+
+				if route.group != nil {
+					route.Name = route.group.name + route.Name
+				}
+			}
+		}
 	}
 
 	if err := app.hooks.executeOnNameHooks(*app.latestRoute); err != nil {
 		panic(err)
 	}
-	app.mutex.Unlock()
 
 	return app
 }
@@ -754,12 +759,16 @@ func (app *App) Patch(path string, handlers ...Handler) Router {
 
 // Add allows you to specify a HTTP method to register a route
 func (app *App) Add(method, path string, handlers ...Handler) Router {
-	return app.register(method, path, nil, handlers...)
+	app.register(method, path, nil, handlers...)
+
+	return app
 }
 
 // Static will create a file server serving static files
 func (app *App) Static(prefix, root string, config ...Static) Router {
-	return app.registerStatic(prefix, root, config...)
+	app.registerStatic(prefix, root, config...)
+
+	return app
 }
 
 // All will register the handler on all HTTP methods
@@ -847,7 +856,7 @@ func (app *App) HandlersCount() uint32 {
 //
 // Shutdown does not close keepalive connections so its recommended to set ReadTimeout to something else than 0.
 func (app *App) Shutdown() error {
-	return app.shutdownWithContext(context.Background())
+	return app.ShutdownWithContext(context.Background())
 }
 
 // ShutdownWithTimeout gracefully shuts down the server without interrupting any active connections. However, if the timeout is exceeded,
@@ -860,11 +869,15 @@ func (app *App) Shutdown() error {
 func (app *App) ShutdownWithTimeout(timeout time.Duration) error {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), timeout)
 	defer cancelFunc()
-	return app.shutdownWithContext(ctx)
+	return app.ShutdownWithContext(ctx)
 }
 
-// shutdownWithContext shuts down the server including by force if the context's deadline is exceeded.
-func (app *App) shutdownWithContext(ctx context.Context) error {
+// ShutdownWithContext shuts down the server including by force if the context's deadline is exceeded.
+//
+// Make sure the program doesn't exit and waits instead for ShutdownWithTimeout to return.
+//
+// ShutdownWithContext does not close keepalive connections so its recommended to set ReadTimeout to something else than 0.
+func (app *App) ShutdownWithContext(ctx context.Context) error {
 	if app.hooks != nil {
 		defer app.hooks.executeOnShutdownHooks()
 	}
@@ -1048,13 +1061,18 @@ func (app *App) serverErrorHandler(fctx *fasthttp.RequestCtx, err error) {
 	c := app.AcquireCtx(fctx)
 	defer app.ReleaseCtx(c)
 
-	var errNetOP *net.OpError
+	var (
+		errNetOP *net.OpError
+		netErr   net.Error
+	)
 
 	switch {
 	case errors.As(err, new(*fasthttp.ErrSmallBuffer)):
 		err = ErrRequestHeaderFieldsTooLarge
 	case errors.As(err, &errNetOP) && errNetOP.Timeout():
 		err = ErrRequestTimeout
+	case errors.As(err, &netErr):
+		err = ErrBadGateway
 	case errors.Is(err, fasthttp.ErrBodyTooLarge):
 		err = ErrRequestEntityTooLarge
 	case errors.Is(err, fasthttp.ErrGetOnly):
@@ -1074,22 +1092,20 @@ func (app *App) serverErrorHandler(fctx *fasthttp.RequestCtx, err error) {
 
 // startupProcess Is the method which executes all the necessary processes just before the start of the server.
 func (app *App) startupProcess() *App {
-	if err := app.hooks.executeOnListenHooks(); err != nil {
-		panic(err)
-	}
-
 	app.mutex.Lock()
 	defer app.mutex.Unlock()
 
-	// add routes of sub-apps
-	app.mountFields.subAppsRoutesAdded.Do(func() {
-		app.appendSubAppLists(app.mountFields.appList)
-		app.addSubAppsRoutes(app.mountFields.appList)
-		app.generateAppListKeys()
-	})
+	app.mountStartupProcess()
 
 	// build route tree stack
 	app.buildTree()
 
 	return app
+}
+
+// Run onListen hooks. If they return an error, panic.
+func (app *App) runOnListenHooks() {
+	if err := app.hooks.executeOnListenHooks(); err != nil {
+		panic(err)
+	}
 }

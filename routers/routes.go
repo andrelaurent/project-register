@@ -8,12 +8,12 @@ import (
 func SetupRoutes(app *fiber.App) {
 	api := app.Group("/api")
 
+	api.Group("/auth", handlers.Authenticate)
+
 	v0 := api.Group("/user")
 	v0.Post("/create", handlers.CreateUser)
 	v0.Post("/login", handlers.UserLogin)
 	v0.Get("/read", handlers.GetAllUsers)
-
-	app.Use(handlers.Authenticate())
 
 	v1 := api.Group("/company")
 	v1.Post("/create", handlers.CreateCompany)
@@ -34,7 +34,6 @@ func SetupRoutes(app *fiber.App) {
 	v2.Patch("/:id", handlers.UpdateClient)
 	v2.Delete("/:id", handlers.DeleteClient)
 	v2.Delete("/hard/:id", handlers.HardDeleteClient)
-	// v2.Post("/recover", handlers.RecoverClient)
 
 	v3 := api.Group("/type")
 	v3.Post("/create", handlers.CreateType)
