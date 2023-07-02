@@ -31,18 +31,6 @@ func CreateProvince(c *fiber.Ctx) error {
 func GetAllProvinces(c *fiber.Ctx) error {
 	db := database.DB.Db
 
-	// page, err := strconv.Atoi(c.Query("page", "1"))
-	// if err != nil || page < 1 {
-	// 	page = 1
-	// }
-
-	// limit, err := strconv.Atoi(c.Query("limit", "10"))
-	// if err != nil || limit < 1 {
-	// 	limit = 10
-	// }
-
-	// offset := (page - 1) * limit
-
 	var provinces []models.Province
 
 	if err := db.Order("id ASC").Preload("Cities").Find(&provinces).Error; err != nil {
