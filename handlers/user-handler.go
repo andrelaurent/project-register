@@ -54,6 +54,13 @@ func UserLogin(c *fiber.Ctx) error {
 		})
 	}
 
+	if err := db.Model(&result).Update("token", token).Error; err != nil {
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(fiber.Map{
+			"message": "could not login",
+		})
+	}
+
 	cookie := fiber.Cookie{
 		Name:     "project-registration-backend",
 		Value:    token,
@@ -66,8 +73,51 @@ func UserLogin(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
 		"data":   result.ID,
-		"token": token,
+		"token":  token,
 	})
+}
+
+func ValidateToken(c *fiber.Ctx, userId uint, token string) bool {
+	var user models.User
+	db := database.DB.Db
+
+	if err := db.First(&user, userId).Error; err != nil {
+		return false
+	}
+
+	return user.Token == token
+}
+
+func Authenticate() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		token := c.Cookies("project-registration-backend")
+
+		claims := &jwt.StandardClaims{}
+		_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+			return []byte(SecretKey), nil
+		})
+
+		if err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"message": "Invalid token",
+			})
+		}
+
+		userID, err := strconv.ParseUint(claims.Subject, 10, 64)
+		if err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"message": "Invalid token",
+			})
+		}
+
+		if !ValidateToken(c, uint(userID), token) {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"message": "Invalid token",
+			})
+		}
+
+		return c.Next()
+	}
 }
 
 func CreateUser(c *fiber.Ctx) error {
