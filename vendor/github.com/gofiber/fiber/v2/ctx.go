@@ -197,73 +197,22 @@ func (app *App) ReleaseCtx(c *Ctx) {
 
 // Accepts checks if the specified extensions or content types are acceptable.
 func (c *Ctx) Accepts(offers ...string) string {
-	if len(offers) == 0 {
-		return ""
-	}
-	header := c.Get(HeaderAccept)
-	if header == "" {
-		return offers[0]
-	}
-
-	spec, commaPos := "", 0
-	for len(header) > 0 && commaPos != -1 {
-		commaPos = strings.IndexByte(header, ',')
-		if commaPos != -1 {
-			spec = utils.Trim(header[:commaPos], ' ')
-		} else {
-			spec = utils.TrimLeft(header, ' ')
-		}
-		if factorSign := strings.IndexByte(spec, ';'); factorSign != -1 {
-			spec = spec[:factorSign]
-		}
-
-		var mimetype string
-		for _, offer := range offers {
-			if len(offer) == 0 {
-				continue
-				// Accept: */*
-			} else if spec == "*/*" {
-				return offer
-			}
-
-			if strings.IndexByte(offer, '/') != -1 {
-				mimetype = offer // MIME type
-			} else {
-				mimetype = utils.GetMIME(offer) // extension
-			}
-
-			if spec == mimetype {
-				// Accept: <MIME_type>/<MIME_subtype>
-				return offer
-			}
-
-			s := strings.IndexByte(mimetype, '/')
-			// Accept: <MIME_type>/*
-			if strings.HasPrefix(spec, mimetype[:s]) && (spec[s:] == "/*" || mimetype[s:] == "/*") {
-				return offer
-			}
-		}
-		if commaPos != -1 {
-			header = header[commaPos+1:]
-		}
-	}
-
-	return ""
+	return getOffer(c.Get(HeaderAccept), acceptsOfferType, offers...)
 }
 
 // AcceptsCharsets checks if the specified charset is acceptable.
 func (c *Ctx) AcceptsCharsets(offers ...string) string {
-	return getOffer(c.Get(HeaderAcceptCharset), offers...)
+	return getOffer(c.Get(HeaderAcceptCharset), acceptsOffer, offers...)
 }
 
 // AcceptsEncodings checks if the specified encoding is acceptable.
 func (c *Ctx) AcceptsEncodings(offers ...string) string {
-	return getOffer(c.Get(HeaderAcceptEncoding), offers...)
+	return getOffer(c.Get(HeaderAcceptEncoding), acceptsOffer, offers...)
 }
 
 // AcceptsLanguages checks if the specified language is acceptable.
 func (c *Ctx) AcceptsLanguages(offers ...string) string {
-	return getOffer(c.Get(HeaderAcceptLanguage), offers...)
+	return getOffer(c.Get(HeaderAcceptLanguage), acceptsOffer, offers...)
 }
 
 // App returns the *App reference to the instance of the Fiber application
@@ -648,7 +597,7 @@ func (c *Ctx) GetRespHeader(key string, defaultValue ...string) string {
 func (c *Ctx) GetReqHeaders() map[string]string {
 	headers := make(map[string]string)
 	c.Request().Header.VisitAll(func(k, v []byte) {
-		headers[string(k)] = c.app.getString(v)
+		headers[c.app.getString(k)] = c.app.getString(v)
 	})
 
 	return headers
@@ -660,7 +609,7 @@ func (c *Ctx) GetReqHeaders() map[string]string {
 func (c *Ctx) GetRespHeaders() map[string]string {
 	headers := make(map[string]string)
 	c.Response().Header.VisitAll(func(k, v []byte) {
-		headers[string(k)] = c.app.getString(v)
+		headers[c.app.getString(k)] = c.app.getString(v)
 	})
 
 	return headers
@@ -1105,6 +1054,35 @@ func (c *Ctx) Query(key string, defaultValue ...string) string {
 	return defaultString(c.app.getString(c.fasthttp.QueryArgs().Peek(key)), defaultValue)
 }
 
+// Queries returns a map of query parameters and their values.
+//
+// GET /?name=alex&wanna_cake=2&id=
+// Queries()["name"] == "alex"
+// Queries()["wanna_cake"] == "2"
+// Queries()["id"] == ""
+//
+// GET /?field1=value1&field1=value2&field2=value3
+// Queries()["field1"] == "value2"
+// Queries()["field2"] == "value3"
+//
+// GET /?list_a=1&list_a=2&list_a=3&list_b[]=1&list_b[]=2&list_b[]=3&list_c=1,2,3
+// Queries()["list_a"] == "3"
+// Queries()["list_b[]"] == "3"
+// Queries()["list_c"] == "1,2,3"
+//
+// GET /api/search?filters.author.name=John&filters.category.name=Technology&filters[customer][name]=Alice&filters[status]=pending
+// Queries()["filters.author.name"] == "John"
+// Queries()["filters.category.name"] == "Technology"
+// Queries()["filters[customer][name]"] == "Alice"
+// Queries()["filters[status]"] == "pending"
+func (c *Ctx) Queries() map[string]string {
+	m := make(map[string]string, c.Context().QueryArgs().Len())
+	c.Context().QueryArgs().VisitAll(func(key, value []byte) {
+		m[c.app.getString(key)] = c.app.getString(value)
+	})
+	return m
+}
+
 // QueryInt returns integer value of key string parameter in the url.
 // Default to empty or invalid key is 0.
 //
@@ -1132,17 +1110,17 @@ func (c *Ctx) QueryInt(key string, defaultValue ...int) int {
 //	Get /?name=alex&want_pizza=false&id=
 //	QueryBool("want_pizza") == false
 //	QueryBool("want_pizza", true) == false
-//	QueryBool("alex") == true
-//	QueryBool("alex", false) == false
-//	QueryBool("id") == true
-//	QueryBool("id", false) == false
+//	QueryBool("name") == false
+//	QueryBool("name", true) == true
+//	QueryBool("id") == false
+//	QueryBool("id", true) == true
 func (c *Ctx) QueryBool(key string, defaultValue ...bool) bool {
 	value, err := strconv.ParseBool(c.app.getString(c.fasthttp.QueryArgs().Peek(key)))
 	if err != nil {
 		if len(defaultValue) > 0 {
 			return defaultValue[0]
 		}
-		return true
+		return false
 	}
 	return value
 }

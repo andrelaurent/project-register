@@ -17,6 +17,7 @@ import (
 )
 
 const SecretKey = "secretkeyforbackendprojectregistrationtest"
+const SessionKey = "user_session"
 
 func UserLogin(c *fiber.Ctx) error {
 	db := database.DB.Db
@@ -61,15 +62,6 @@ func UserLogin(c *fiber.Ctx) error {
 		})
 	}
 
-	cookie := fiber.Cookie{
-		Name:     "project-registration-backend",
-		Value:    token,
-		Expires:  time.Now().Add(time.Hour * 24),
-		HTTPOnly: true,
-	}
-
-	c.Cookie(&cookie)
-
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
 		"data":   result.ID,
@@ -88,36 +80,34 @@ func ValidateToken(c *fiber.Ctx, userId uint, token string) bool {
 	return user.Token == token
 }
 
-func Authenticate() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		token := c.Cookies("project-registration-backend")
+func Authenticate(c *fiber.Ctx) error {
 
-		claims := &jwt.StandardClaims{}
-		_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
-			return []byte(SecretKey), nil
-		})
-
-		if err != nil {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"message": "Invalid token",
-			})
-		}
-
-		userID, err := strconv.ParseUint(claims.Subject, 10, 64)
-		if err != nil {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"message": "Invalid token",
-			})
-		}
-
-		if !ValidateToken(c, uint(userID), token) {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"message": "Invalid token",
-			})
-		}
-
-		return c.Next()
+	type Request struct {
+		UserId uint   `json:"user_id"`
+		Token  string `json:"token"`
 	}
+
+	var request Request
+
+	err := c.BodyParser(&request)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Invalid input",
+		})
+	}
+
+	if ValidateToken(c, request.UserId, request.Token) {
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"status":  "success",
+			"message": "Token is valid",
+		})
+	}
+
+	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+		"status":  "error",
+		"message": "Token is invalid",
+	})
 }
 
 func CreateUser(c *fiber.Ctx) error {
