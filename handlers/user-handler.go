@@ -4,6 +4,8 @@ import (
 	"crypto/sha512"
 	"crypto/subtle"
 	"encoding/base64"
+	"fmt"
+	"strings"
 	"time"
 
 	"math"
@@ -69,11 +71,11 @@ func UserLogin(c *fiber.Ctx) error {
 	})
 }
 
-func ValidateToken(c *fiber.Ctx, userId uint, token string) bool {
+func ValidateToken(c *fiber.Ctx, token string) bool {
 	var user models.User
 	db := database.DB.Db
 
-	if err := db.First(&user, userId).Error; err != nil {
+	if err := db.Where("token = ?", token).First(&user).Error; err != nil {
 		return false
 	}
 
@@ -82,29 +84,39 @@ func ValidateToken(c *fiber.Ctx, userId uint, token string) bool {
 
 func Authenticate() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		token := c.Get("Authorization")
+		authHeader := c.Get("Authorization")
+
+		if authHeader == "" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"message": "Missing token",
+			})
+		}
+
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+		fmt.Println(authHeader)
+
+		if token == authHeader {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"message": "Invalid token",
+			})
+		}
 
 		claims := &jwt.StandardClaims{}
-		_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+		parsedToken, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
 			return []byte(SecretKey), nil
 		})
 
-		if err != nil || claims.Issuer == "" {
+		if err != nil || !parsedToken.Valid {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"message": "Invalid token",
+				"no": "error 1",
 			})
 		}
 
-		userID, err := strconv.ParseUint(claims.Issuer, 10, 64)
-		if err != nil {
+		if !ValidateToken(c, token) {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"message": "Invalid token",
-			})
-		}
-
-		if !ValidateToken(c, uint(userID), token) {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"message": "Invalid token",
+				"no": "error 3",
 			})
 		}
 
