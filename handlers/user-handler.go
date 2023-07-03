@@ -82,7 +82,7 @@ func ValidateToken(c *fiber.Ctx, userId uint, token string) bool {
 
 func Authenticate() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		token := c.Get("Authorization") // Assuming the token is passed in the "Authorization" header
+		token := c.Get("Authorization")
 
 		claims := &jwt.StandardClaims{}
 		_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
