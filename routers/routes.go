@@ -13,7 +13,7 @@ func SetupRoutes(app *fiber.App) {
 	v0.Post("/login", handlers.UserLogin)
 	v0.Get("/read", handlers.GetAllUsers)
 
-	app.Use(handlers.Authenticate())
+	// app.Use(handlers.Authenticate())
 
 	v1 := api.Group("/company")
 	v1.Post("/create", handlers.CreateCompany)
@@ -72,7 +72,7 @@ func SetupRoutes(app *fiber.App) {
 	v6.Get("/read", handlers.GetAllLocations)
 	v6.Get("/read/:id", handlers.GetLocationByID)
 	v6.Get("/search", handlers.SearchLocation)
-	v6.Put("/:id", handlers.UpdateLocation)
+	v6.Patch("/:id", handlers.UpdateLocation)
 	v6.Delete("/:id", handlers.DeleteLocation)
 	v6.Delete("/hard/:id", handlers.HardDeleteLocation)
 	v6.Post("/recover", handlers.RecoverLocation)

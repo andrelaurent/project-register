@@ -157,24 +157,37 @@ func UpdateLocation(c *fiber.Ctx) error {
 	db := database.DB.Db
 	var location models.Locations
 
-	if err := c.BodyParser(location); err != nil {
+	err := c.BodyParser(&location)
+	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
 	}
 
 	id := c.Params("id")
 
 	existingLocation := models.Locations{}
-	err := db.First(&existingLocation, id).Error
+	err = db.First(&existingLocation, id).Error
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Location not found", "data": nil})
 	}
 
-	existingLocation.Address = location.Address
-	existingLocation.City = location.City
-	existingLocation.Province = location.Province
-	existingLocation.PostalCode = location.PostalCode
-	existingLocation.Country = location.Country
-	existingLocation.Geo = location.Geo
+	if location.Address != "" {
+		existingLocation.Address = location.Address
+	}
+	if location.CityID != 0 {
+		existingLocation.City = location.City
+	}
+	if location.ProvinceID != 0 {
+		existingLocation.Province = location.Province
+	}
+	if location.PostalCode != "" {
+		existingLocation.PostalCode = location.PostalCode
+	}
+	if location.Country != "" {
+		existingLocation.Country = location.Country
+	}
+	if location.Geo != "" {
+		existingLocation.Geo = location.Geo
+	}
 
 	err = db.Save(&existingLocation).Error
 	if err != nil {
