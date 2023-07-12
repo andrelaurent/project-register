@@ -196,7 +196,7 @@ func UpdateLocation(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Locations Found", "data": location})
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Locations Found", "data": existingLocation})
 }
 
 func DeleteLocation(c *fiber.Ctx) error {
